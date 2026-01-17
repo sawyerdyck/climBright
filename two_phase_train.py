@@ -11,10 +11,10 @@ from tqdm import tqdm
 # =========================
 DATA_DIR = "holds_cls"   # <-- change if your folder name is different
 NUM_CLASSES = 6
-BATCH_SIZE = 32
+BATCH_SIZE = 64
 NUM_WORKERS = 0          # Windows safe. After it works, try 2.
 PHASE_A_EPOCHS = 2
-PHASE_B_EPOCHS = 30
+PHASE_B_EPOCHS = 20
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 MODEL_NAME = "convnext_tiny.in12k_ft_in1k"
 BEST_PATH = "best_convnext_two_phase.pt"
@@ -56,6 +56,21 @@ def make_loaders():
         num_workers=NUM_WORKERS, pin_memory=(DEVICE == "cuda")
     )
     return train_ds, train_loader, val_loader
+
+def make_real_val_loader():
+    # Optional verification set at DATA_DIR/real_val (unseen images)
+    _, eval_tf = get_transforms()
+    real_val_dir = os.path.join(DATA_DIR, "real_val")
+
+    if not os.path.isdir(real_val_dir):
+        return None
+
+    real_val_ds = datasets.ImageFolder(real_val_dir, transform=eval_tf)
+    real_val_loader = DataLoader(
+        real_val_ds, batch_size=BATCH_SIZE, shuffle=False,
+        num_workers=NUM_WORKERS, pin_memory=(DEVICE == "cuda")
+    )
+    return real_val_ds, real_val_loader
 
 @torch.no_grad()
 def evaluate(model, loader, criterion):
@@ -181,10 +196,28 @@ def main():
             torch.save(model.state_dict(), BEST_PATH)
             print(f"Saved best so far (val acc={best_val_acc:.3f})")
 
+    # =========================
+    # VERIFICATION: unseen images (real_val)
+    # =========================
+    print("\n=== Verification on real_val (unseen images) ===")
+    # Load best checkpoint if available before verification
+    if os.path.isfile(BEST_PATH):
+        state = torch.load(BEST_PATH, map_location=DEVICE)
+        model.load_state_dict(state)
+        print("Loaded best checkpoint for verification.")
+
+    real_val = make_real_val_loader()
+    if real_val is None:
+        print(f"No verification folder found at {os.path.join(DATA_DIR, 'real_val')} — skipping.")
+    else:
+        real_val_ds, real_val_loader = real_val
+        rv_loss, rv_acc = evaluate(model, real_val_loader, criterion)
+        print(f"Verification set size: {len(real_val_ds)}")
+        print(f"Verification accuracy: {rv_acc:.4f} | loss: {rv_loss:.4f}")
+
     print("\nDone.")
     print("Best model saved to:", BEST_PATH)
     print("Best validation accuracy:", round(best_val_acc, 4))
-    torch.save(model.state_dict(), "two_phase_train.pt")
 
 if __name__ == "__main__":
     main()
