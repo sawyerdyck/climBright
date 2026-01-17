@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from PIL import Image
 
-SRC = Path("C:/Users/Admin/Desktop/climBright/cr_data/Final_Dataset")   #C:\Users\Admin\Desktop\climBright\cr_data\Final_Dataset       # has train/valid/test
+SRC = Path(r"C:\Users\sunna\Code\uottahacks\indoor-climbing-gym-hold-classification-dataset\Final_Dataset")   #C:\Users\Admin\Desktop\climBright\cr_data\Final_Dataset       # has train/valid/test
 DST = Path("holds_cls")              # output classification dataset
 SPLIT_MAP = {"train": "train", "valid": "val", "test": "test"}
 
