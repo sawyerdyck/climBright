@@ -184,6 +184,7 @@ def main():
     print("\nDone.")
     print("Best model saved to:", BEST_PATH)
     print("Best validation accuracy:", round(best_val_acc, 4))
+    torch.save(model.state_dict(), "two_phase_train.pt")
 
 if __name__ == "__main__":
     main()
