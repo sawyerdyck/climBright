@@ -43,3 +43,18 @@ to map the wall and find all possible routes from the json output of detect_and_
  --overlay-out outputs/routes.png `
  --paths-out outputs/routes.json
 ```
+
+First pass (saves detections JSON)
+``` Bash
+python detect_and_classify.py -i holds_cls/real_val/wall-with-bunch-of-holds.png --json-out outputs/detections.json
+```
+
+Capture wall corners and persist homography (only once per wall):
+``` Bash
+python map_wall.py -i holds_cls/real_val/wall-with-bunch-of-holds.png --holds outputs/detections.json --save-homography saved.npy --overlay-out outputs/routes.png --paths-out outputs/routes.json
+```
+
+Re-run later with existing homography(no need to capture corners again):
+``` Bash
+python map_wall.py -i holds_cls/real_val/wall-with-bunch-of-holds.png --holds outputs/detections.json --homography saved.npy --overlay-out outputs/routes.png --paths-out outputs/routes.json
+```
