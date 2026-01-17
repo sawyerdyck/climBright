@@ -8,7 +8,7 @@ to train a model to classify climbing holds from images
 1. Use a pre-trained model (ResNet50) and fine-tune it on a dataset of climbing hold images.
 - run "two_phases_train.py"
 
-2. train a yolo detector small model from scratch on a dataset of climbing hold images.
+2. train a yolo detector small model from scratch on a dataset of climbing hold images. (path-finding/runs/train2/weights/best.pt)
 ``` Bash   
 yolo detect train model=yolov8n.pt data=data.yaml imgsz=640 epochs=50 batch=16 device=gpu  # use cpu if no gpu: device=cpu
 ```
