@@ -101,3 +101,41 @@ footer {
   padding: 2rem;
   color: var(--muted);
 }
+
+.wall-container {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.image-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.image-wrapper img {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.hold-marker {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: #3ddc97;
+  border-radius: 50%;
+  border: 2px solid #0e1117;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+}
+
+.hold-marker:hover {
+  background: #58f5b4;
+}
+
+.hold-info {
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 1rem;
+}

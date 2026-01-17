@@ -9,7 +9,7 @@
 <body>
 
   <header class="navbar">
-    <h1>🧗‍♂️ ClimbAI</h1>
+    <h1>ClimbAI</h1>
     <nav>
       <a href="#holds">Hold Classifier</a>
       <a href="#wall">Wall Analysis</a>
@@ -29,7 +29,7 @@
 
     <!-- Hold Classifier -->
     <section id="holds" class="card">
-      <h3>🪨 Hold Classifier</h3>
+      <h3>Hold Classifier</h3>
       <p>Upload images of individual holds to classify grip type and difficulty.</p>
 
       <div class="upload-box" id="holdUpload">
@@ -45,26 +45,31 @@
       </div>
     </section>
 
-    <!-- Wall Analyzer -->
+    <!-- Wall Analyzer
     <section id="wall" class="card">
-      <h3>🧠 Wall Route Analyzer</h3>
-      <p>
-        Upload a full wall image to generate an optimal climbing path.
+  <h3>Wall Route Analyzer</h3>
+  <p>Upload a full wall image, then select individual holds for analysis.</p>
+
+  <div class="upload-box" id="wallUpload">
+    <input type="file"  hidden />
+    <span>Click or drag wall image here</span>
+  </div>
+
+  <div class="wall-container">
+    <div class="image-wrapper" id="wallImageWrapper">
+      <img id="wallImage" />
+      
+    </div>
+
+    <div class="hold-info">
+      <h4>Selected Hold</h4>
+      <p class="placeholder" id="holdInfoText">
+        Click a hold on the wall to see details.
       </p>
+    </div>
+  </div>
+</section> -->
 
-      <div class="upload-box" id="wallUpload">
-        <input type="file" hidden />
-        <span>Click or drag wall image here</span>
-      </div>
-
-      <div class="preview" id="wallPreview"></div>
-
-      <div class="result-box">
-        <h4>Optimal Route</h4>
-        <canvas id="routeCanvas"></canvas>
-        <p class="placeholder">Path visualization will appear here.</p>
-      </div>
-    </section>
 
   </main>
 
