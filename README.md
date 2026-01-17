@@ -28,3 +28,9 @@ python detect_and_classify.py -i 'path/to/your/images/' -y 'path/to/yolo/detecto
 
 # Requirements
 - see requirements.txt
+
+
+To turn on a web API server using FastAPI on port 9000:
+``` Bash 
+uvicorn main:app --reload --port 9000 
+```
