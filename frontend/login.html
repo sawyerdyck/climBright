@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ClimbAI – Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+  <header class="navbar">
+    <h1><a class="brand" href="/holds">ClimbAI</a></h1>
+    <nav>
+      <a href="/holds">Hold Classifier</a>
+      <a href="/wall">Wall Analysis</a>
+    </nav>
+
+    <div class="auth-bar">
+      <span class="auth-status" id="authStatus">Not signed in</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="card auth-page">
+      <h2>Login</h2>
+      <p class="muted">Sign in to analyze and store your uploads.</p>
+
+      <form id="loginForm" class="form">
+        <label>
+          Email
+          <input type="email" id="loginEmail" autocomplete="email" required />
+        </label>
+        <label>
+          Password
+          <input type="password" id="loginPassword" autocomplete="current-password" required />
+        </label>
+        <button class="btn" type="submit">Login</button>
+      </form>
+
+      <p class="form-error" id="authError" hidden></p>
+
+      <p class="form-hint">
+        Don’t have an account? <a href="/register">Create one</a>.
+      </p>
+    </section>
+  </main>
+
+  <script src="/auth.js"></script>
+</body>
+</html>

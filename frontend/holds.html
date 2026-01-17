@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ClimbAI – Hold Classifier</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+  <header class="navbar">
+    <h1><a class="brand" href="/holds">ClimbAI</a></h1>
+    <nav>
+      <a class="active" href="/holds">Hold Classifier</a>
+      <a href="/wall">Wall Analysis</a>
+    </nav>
+
+    <div class="auth-bar">
+      <span class="auth-status" id="authStatus">Checking session…</span>
+      <button class="btn btn-secondary" id="logoutBtn" hidden>Logout</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h2>Hold Classifier</h2>
+      <p>Upload an image of a hold to classify it.</p>
+    </section>
+
+    <section id="holds" class="card">
+      <h3>Upload</h3>
+      <p>Click or drag an image. We keep the preview and also send base64 to your FastAPI.</p>
+
+      <div class="upload-box" id="holdUpload">
+        <input type="file" hidden accept="image/jpeg,image/png" />
+        <span>Click or drag an image here</span>
+      </div>
+
+      <div class="preview" id="holdPreview"></div>
+
+      <div class="result-box">
+        <h4>Classification Result</h4>
+        <p class="placeholder" id="holdResultText">Waiting for AI output...</p>
+      </div>
+    </section>
+  </main>
+
+
+  <script src="/holds.js"></script>
+</body>
+</html>

@@ -14,6 +14,12 @@
       <a href="#holds">Hold Classifier</a>
       <a href="#wall">Wall Analysis</a>
     </nav>
+
+    <div class="auth-bar">
+      <span class="auth-status" id="authStatus">Not signed in</span>
+      <button class="btn" id="openAuthBtn">Login</button>
+      <button class="btn btn-secondary" id="logoutBtn" hidden>Logout</button>
+    </div>
   </header>
 
   <main>
@@ -41,7 +47,7 @@
 
       <div class="result-box">
         <h4>Classification Result</h4>
-        <p class="placeholder">Waiting for AI output...</p>
+        <p class="placeholder" id="holdResultText">Waiting for AI output...</p>
       </div>
     </section>
 
@@ -73,9 +79,46 @@
 
   </main>
 
-  <footer>
-    <p>Built for Hackathons • CNN + Pathfinding • Frontend Prototype</p>
-  </footer>
+  <!-- Auth Modal -->
+  <div class="modal" id="authModal" aria-hidden="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Account</h3>
+        <button class="icon-btn" id="closeAuthBtn" aria-label="Close">×</button>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" id="tabLogin">Login</button>
+        <button class="tab" id="tabRegister">Register</button>
+      </div>
+
+      <form id="loginForm" class="form">
+        <label>
+          Email
+          <input type="email" id="loginEmail" autocomplete="email" required />
+        </label>
+        <label>
+          Password
+          <input type="password" id="loginPassword" autocomplete="current-password" required />
+        </label>
+        <button class="btn" type="submit">Login</button>
+      </form>
+
+      <form id="registerForm" class="form" hidden>
+        <label>
+          Email
+          <input type="email" id="registerEmail" autocomplete="email" required />
+        </label>
+        <label>
+          Password (min 6 chars)
+          <input type="password" id="registerPassword" autocomplete="new-password" minlength="6" required />
+        </label>
+        <button class="btn" type="submit">Create Account</button>
+      </form>
+
+      <p class="form-error" id="authError" hidden></p>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>

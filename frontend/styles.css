@@ -26,10 +26,68 @@ body {
   border-bottom: 1px solid #30363d;
 }
 
+.auth-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.auth-status {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.btn {
+  background: var(--accent);
+  color: #06120d;
+  border: none;
+  border-radius: 10px;
+  padding: 0.55rem 0.9rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.btn:hover {
+  filter: brightness(1.05);
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid #30363d;
+  color: var(--text);
+}
+
+.btn-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .navbar a {
   color: var(--muted);
   margin-left: 1rem;
   text-decoration: none;
+}
+
+.brand {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.navbar a.active {
+  color: var(--accent);
+}
+
+a {
+  color: var(--accent);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.auth-page {
+  max-width: 520px;
+  margin: 2rem auto;
 }
 
 .navbar a:hover {
@@ -138,4 +196,101 @@ footer {
   border: 1px solid #30363d;
   border-radius: 8px;
   padding: 1rem;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 999;
+}
+
+.modal.open {
+  display: flex;
+}
+
+.modal-content {
+  width: min(520px, 100%);
+  background: var(--card);
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.icon-btn {
+  background: transparent;
+  border: 1px solid #30363d;
+  color: var(--text);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.tab {
+  flex: 1;
+  background: transparent;
+  border: 1px solid #30363d;
+  color: var(--muted);
+  border-radius: 10px;
+  padding: 0.6rem;
+  cursor: pointer;
+}
+
+.tab.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.form label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted);
+}
+
+.form input {
+  background: #0b0f14;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  padding: 0.7rem;
+  color: var(--text);
+}
+
+.form input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.form-error {
+  margin-top: 0.75rem;
+  color: #ff7b72;
+}
+
+.form-hint {
+  margin-top: 0.75rem;
+  color: var(--muted);
+  font-size: 0.9rem;
 }
