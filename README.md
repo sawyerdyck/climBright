@@ -26,5 +26,20 @@ to detect and classify holds in an image:
 python detect_and_classify.py -i 'path/to/your/images/' -y 'path/to/yolo/detector-model' -c 'path/to/your/classifier-model'
 ```
 
+run with json output:
+``` Bash
+python detect_and_classify.py -i 'path/to/your/images/' -y 'path/to/yolo/detector-model' -c 'path/to/your/classifier-model' --json-out 'path/to/save/detections.json'
+```
+
 # Requirements
 - see requirements.txt
+
+to map the wall and find all possible routes from the json output of detect_and_classify.py:
+``` Bash
+ python .\map_wall.py `
+ -i "C:\Users\sunna\Downloads\altitude2.jpg" ` 
+ --holds .\detections.json `
+ --homography .\save\.npy `                                    
+ --overlay-out outputs/routes.png `
+ --paths-out outputs/routes.json
+```

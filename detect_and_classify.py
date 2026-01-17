@@ -3,6 +3,7 @@ Two-stage inference: YOLO detection → ConvNeXt classification
 Uses YOLO to find holds, then classifies each detected box with ConvNeXt.
 """
 import os
+import json
 import argparse
 import torch
 import cv2
@@ -148,7 +149,7 @@ def detect_and_classify(detector, classifier, image_path, device, save_output=Tr
             'class_id': class_id,
             'class_name': class_name,
             'confidence': confidence,
-            'probs': probs.cpu().numpy()
+            'probs': probs.cpu().tolist()
         })
         
         print(f"  Box {i+1}: {class_name} ({confidence:.2%}) | YOLO conf: {yolo_conf:.2%}")
@@ -186,6 +187,47 @@ def detect_and_classify(detector, classifier, image_path, device, save_output=Tr
     return classified_results
 
 
+def save_results_json(classified_results, image_path, output_path, yolo_model=None, classifier_model=None):
+    """Persist detections and classifications to a JSON file for downstream routing."""
+    holds_payload = []
+    for idx, det in enumerate(classified_results):
+        x1, y1, x2, y2 = det['box']
+        px1, py1, px2, py2 = det['padded_box']
+        cx = 0.5 * (x1 + x2)
+        cy = 0.5 * (y1 + y2)
+
+        holds_payload.append({
+            'id': idx,
+            'cx': float(cx),
+            'cy': float(cy),
+            'class_id': int(det['class_id']),
+            'class_name': det['class_name'],
+            'confidence': float(det['confidence']),
+            'yolo_conf': float(det['yolo_conf']),
+            'yolo_class': int(det['yolo_class']) if det['yolo_class'] is not None else None,
+            'box': [int(x1), int(y1), int(x2), int(y2)],
+            'padded_box': [int(px1), int(py1), int(px2), int(py2)],
+            'probs': [float(p) for p in det['probs']],
+        })
+
+    payload = {
+        'image': image_path,
+        'yolo_model': yolo_model,
+        'classifier_model': classifier_model,
+        'class_names': CLASS_NAMES,
+        'num_classes': NUM_CLASSES,
+        'holds': holds_payload,
+    }
+
+    out_dir = os.path.dirname(output_path)
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
+
+    with open(output_path, 'w', encoding='utf-8') as fp:
+        json.dump(payload, fp, indent=2)
+    print(f"\n✓ Saved JSON results to: {output_path}")
+
+
 def main():
     global YOLO_CONF_THRESHOLD, BOX_PADDING
     parser = argparse.ArgumentParser(
@@ -213,6 +255,11 @@ def main():
         '--no-save',
         action='store_true',
         help='Do not save visualization'
+    )
+    parser.add_argument(
+        '--json-out',
+        type=str,
+        help='Path to write detections and classifications JSON'
     )
     parser.add_argument(
         '--conf',
@@ -246,6 +293,15 @@ def main():
         DEVICE,
         save_output=not args.no_save
     )
+
+    if args.json_out:
+        save_results_json(
+            results,
+            args.image,
+            args.json_out,
+            yolo_model=args.yolo,
+            classifier_model=args.classifier
+        )
     
     # Summary
     print(f"\n{'='*60}")

@@ -1,0 +1,19 @@
+{
+  "image": "C:\\Users\\sunna\\Downloads\\altitude2.jpg",
+  "holds_file": ".\\detections.json",
+  "homography": ".\\save\\.npy",
+  "start_ids": [
+    3,
+    4
+  ],
+  "finish_ids": [
+    12
+  ],
+  "graph_params": {
+    "reach": 0.18,
+    "max_down": 0.03,
+    "max_side": 0.25
+  },
+  "enumerated_paths": [],
+  "shortest_paths": []
+}
