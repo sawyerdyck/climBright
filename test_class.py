@@ -9,8 +9,8 @@ from tqdm import tqdm
 
 DATA = "holds_cls"      # change if needed
 NUM_CLASSES = 6
-BATCH = 32
-EPOCHS = 3              # short on purpose
+BATCH = 30
+EPOCHS = 10            # short on purpose
 MAX_TRAIN_SAMPLES = 200 # tiny subset for smoke test
 MAX_VAL_SAMPLES = 200
 
@@ -24,6 +24,8 @@ def make_subset(ds, n):
     return Subset(ds, idx[:n])
 
 def main():
+    print("Using device:", DEVICE)
+
     train_tf = transforms.Compose([
         transforms.RandomResizedCrop(224, scale=(0.7, 1.0)),
         transforms.RandomHorizontalFlip(0.5),
@@ -79,6 +81,7 @@ def main():
                 v_correct += (pred == y).sum().item()
                 v_total += y.size(0)
         print(f"Val acc: {v_correct/max(v_total,1):.3f}")
+        torch.save(model.state_dict(), f"resnet18_best.pt")
 
 if __name__ == "__main__":
     main()
