@@ -195,11 +195,14 @@ pip install -r requirements.txt
 
 ---
 # Web API #
-
 - The model has a web API using FastAPI.
 
 To turn on a web API server using FastAPI on port 9000:
 ``` Bash 
 uvicorn main:app --reload --port 9000 
+```
+MAKE SURE TO ADD PYTHONPATH IF NEEDED:
+``` Bash
+$env:PYTHON_BIN = "C:\Users\sunna\Code\uottahacks\env\Scripts\python.exe"
 ```
 

@@ -61,16 +61,27 @@ router.post("/analyze", async (req, res) => {
   const holdsJsonPath = path.join(uploadsDir, `${ts}_holds.json`);
   fs.writeFileSync(holdsJsonPath, JSON.stringify({ holds: safeHolds }, null, 2));
 
-  const venvPy = path.join(rootDir, "env", "bin", "python");
+  const venvPyUnix = path.join(rootDir, "env", "bin", "python");
+  const venvPyWin = path.join(rootDir, "env", "Scripts", "python.exe");
+  const venvPyWinShim = path.join(rootDir, "env", "Scripts", "python");
   let pythonBin = process.env.PYTHON_BIN;
 
   // Prefer the repo venv if present (it has Pillow/google-genai, etc.).
   // This prevents default configs like PYTHON_BIN=python3 from breaking.
-  if (fs.existsSync(venvPy) && (!pythonBin || pythonBin === "python3" || pythonBin === "python")) {
-    pythonBin = venvPy;
+  if (
+    (!pythonBin || pythonBin === "python3" || pythonBin === "python") &&
+    (fs.existsSync(venvPyUnix) || fs.existsSync(venvPyWin) || fs.existsSync(venvPyWinShim))
+  ) {
+    pythonBin = fs.existsSync(venvPyUnix)
+      ? venvPyUnix
+      : fs.existsSync(venvPyWin)
+        ? venvPyWin
+        : venvPyWinShim;
   }
 
-  pythonBin = pythonBin || "python3";
+  if (!pythonBin) {
+    pythonBin = process.platform === "win32" ? "python" : "python3";
+  }
   const pathfinderPath = path.join(rootDir, "pathfinder.py");
 
   const args = [pathfinderPath, "--image", imagePath, "--json", holdsJsonPath];
@@ -83,6 +94,17 @@ router.post("/analyze", async (req, res) => {
 
   let out = "";
   let err = "";
+  let responded = false;
+
+  function reply(status, payload) {
+    if (responded) return;
+    responded = true;
+    if (status === "error") {
+      res.status(payload.status || 502).json(payload.body);
+    } else {
+      res.json(payload.body);
+    }
+  }
 
   child.stdout.on("data", (d) => {
     out += d.toString();
@@ -91,16 +113,35 @@ router.post("/analyze", async (req, res) => {
     err += d.toString();
   });
 
+  child.on("error", (spawnErr) => {
+    const message =
+      spawnErr.code === "ENOENT"
+        ? `Unable to execute python interpreter \"${pythonBin}\". Install Python or set PYTHON_BIN to a valid executable.`
+        : `Failed to launch pathfinder: ${spawnErr.message}`;
+    reply("error", {
+      status: 502,
+      body: { error: message },
+    });
+  });
+
   child.on("close", (code) => {
+    if (responded) return;
+
     if (code !== 0) {
-      return res.status(502).json({ error: `pathfinder failed (${code})`, details: err || out });
+      return reply("error", {
+        status: 502,
+        body: { error: `pathfinder failed (${code})`, details: err || out },
+      });
     }
 
     try {
       const coach = parseJsonFromStdout(out);
-      return res.json({ ok: true, coach });
+      return reply("ok", { body: { ok: true, coach } });
     } catch (e) {
-      return res.status(502).json({ error: "Failed to parse pathfinder output", details: out || err });
+      return reply("error", {
+        status: 502,
+        body: { error: "Failed to parse pathfinder output", details: out || err },
+      });
     }
   });
 });
