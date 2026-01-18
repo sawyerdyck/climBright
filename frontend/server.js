@@ -1,6 +1,10 @@
 const path = require("path");
 
-require("dotenv").config();
+const dotenv = require("dotenv");
+
+// Load secrets from repo root .env first (API keys, etc), then allow frontend/.env to override.
+dotenv.config({ path: path.join(__dirname, "..", ".env") });
+dotenv.config();
 
 const express = require("express");
 const mongoose = require("mongoose");

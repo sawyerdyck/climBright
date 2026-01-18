@@ -3,5 +3,31 @@ node_modules/
 
 # Environment variables
 .env
+.env.*
 
 .gitignore
+
+*.zip
+*.multiclass
+/holds_cls/
+*.jpg
+/indoor-climbing-gym-hold-classification-dataset/ 
+/venv
+*.png
+*.jpg
+__pycache__/
+users.db
+users.db-*
+*.db-wal
+*.db-shm
+*.db-journal
+
+# Secrets / local env
+.env
+.env.*
+frontend/.env
+!*.example
+
+# Local databases / uploads
+db/**
+!db/**/.gitkeep

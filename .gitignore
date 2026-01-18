@@ -13,6 +13,12 @@ users.db-*
 *.db-shm
 *.db-journal
 
+# Secrets / local env
+.env
+.env.*
+frontend/.env
+!*.example
+
 # Local databases / uploads
 db/**
 !db/**/.gitkeep

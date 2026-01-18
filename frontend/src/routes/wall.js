@@ -61,7 +61,16 @@ router.post("/analyze", async (req, res) => {
   const holdsJsonPath = path.join(uploadsDir, `${ts}_holds.json`);
   fs.writeFileSync(holdsJsonPath, JSON.stringify({ holds: safeHolds }, null, 2));
 
-  const pythonBin = process.env.PYTHON_BIN || "python3";
+  const venvPy = path.join(rootDir, "env", "bin", "python");
+  let pythonBin = process.env.PYTHON_BIN;
+
+  // Prefer the repo venv if present (it has Pillow/google-genai, etc.).
+  // This prevents default configs like PYTHON_BIN=python3 from breaking.
+  if (fs.existsSync(venvPy) && (!pythonBin || pythonBin === "python3" || pythonBin === "python")) {
+    pythonBin = venvPy;
+  }
+
+  pythonBin = pythonBin || "python3";
   const pathfinderPath = path.join(rootDir, "pathfinder.py");
 
   const args = [pathfinderPath, "--image", imagePath, "--json", holdsJsonPath];

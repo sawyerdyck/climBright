@@ -4,6 +4,15 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+# Load secrets/config from repo root if present (API keys, etc.)
+ENV_FILE="$ROOT_DIR/.env"
+if [[ -f "$ENV_FILE" ]]; then
+	set -a
+	# shellcheck disable=SC1090
+	source "$ENV_FILE"
+	set +a
+fi
+
 # SQLite will be created under ./db/sqlite/users.db
 export CLIMB_DB_DIR="./db"
 
