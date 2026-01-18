@@ -1,0 +1,218 @@
+{
+  "routeA": {
+    "description": "This route focuses on the left side of the wall, utilizing a mix of holds including crimps, jugs, and a pinch to reach the top pockets.",
+    "steps": [
+      {
+        "instruction": "Start by placing your left foot on the small 'Crimp' (ID 11) to establish balance.",
+        "hold_id": 11,
+        "type": "Crimp",
+        "center_norm": [
+          0.15480043149946063,
+          0.894134775374376
+        ],
+        "bbox_wh_norm": [
+          0.09385113268608414,
+          0.03036605657237937
+        ]
+      },
+      {
+        "instruction": "Grab the 'Crimp' (ID 23) with your right hand. This is a small hold, so engage your core.",
+        "hold_id": 23,
+        "type": "Crimp",
+        "center_norm": [
+          0.15641855447680691,
+          0.7693427620632279
+        ],
+        "bbox_wh_norm": [
+          0.0668824163969795,
+          0.027870216306156406
+        ]
+      },
+      {
+        "instruction": "Bring your right foot up to the 'Crimp' (ID 15) to gain higher leverage.",
+        "hold_id": 15,
+        "type": "Crimp",
+        "center_norm": [
+          0.03128371089536138,
+          0.7146422628951747
+        ],
+        "bbox_wh_norm": [
+          0.06256742179072276,
+          0.02745424292845258
+        ]
+      },
+      {
+        "instruction": "Reach your left hand to the large 'Jug' (ID 1), getting a full grip. This offers a good resting point.",
+        "hold_id": 1,
+        "type": "Jug",
+        "center_norm": [
+          0.18446601941747573,
+          0.6701331114808652
+        ],
+        "bbox_wh_norm": [
+          0.3516720604099245,
+          0.08402662229617304
+        ]
+      },
+      {
+        "instruction": "From 'Jug' (ID 1), reach with your right hand to 'Jug' (ID 13) which is slightly to the right.",
+        "hold_id": 13,
+        "type": "Jug",
+        "center_norm": [
+          0.24325782092772383,
+          0.6118968386023295
+        ],
+        "bbox_wh_norm": [
+          0.27939590075512405,
+          0.09151414309484193
+        ]
+      },
+      {
+        "instruction": "Match hands or reach your left hand to 'Jug' (ID 6), just above and to the right of 'Jug' (ID 13).",
+        "hold_id": 6,
+        "type": "Jug",
+        "center_norm": [
+          0.43473570658036675,
+          0.610648918469218
+        ],
+        "bbox_wh_norm": [
+          0.24379719525350593,
+          0.08985024958402663
+        ]
+      },
+      {
+        "instruction": "With a good stance, reach your right hand up to the large 'Pinch' (ID 0). Maintain an open hand grip.",
+        "hold_id": 0,
+        "type": "Pinch",
+        "center_norm": [
+          0.2551240560949299,
+          0.271630615640599
+        ],
+        "bbox_wh_norm": [
+          0.27292340884573896,
+          0.11314475873544093
+        ]
+      },
+      {
+        "instruction": "Match feet or bring your left foot high to get into a good position, then reach your left hand for 'Pocket' (ID 12) at the top to finish.",
+        "hold_id": 12,
+        "type": "Pocket",
+        "center_norm": [
+          0.6720604099244876,
+          0.10420133111480866
+        ],
+        "bbox_wh_norm": [
+          0.10787486515641856,
+          0.03618968386023295
+        ]
+      }
+    ]
+  },
+  "routeB": {
+    "description": "This route starts on the right, uses larger but less positive holds like slopers and jugs, and then traverses slightly left to finish.",
+    "steps": [
+      {
+        "instruction": "Start by placing both feet on the large 'Sloper' (ID 3). Lean into the wall to maximize friction and keep your hips close.",
+        "hold_id": 3,
+        "type": "Sloper",
+        "center_norm": [
+          0.813915857605178,
+          0.9419717138103162
+        ],
+        "bbox_wh_norm": [
+          0.36138079827400216,
+          0.11605657237936771
+        ]
+      },
+      {
+        "instruction": "Reach your right hand to 'Jug' (ID 20), which is a very positive hold, to pull yourself off the ground.",
+        "hold_id": 20,
+        "type": "Jug",
+        "center_norm": [
+          0.5830636461704423,
+          0.6757487520798668
+        ],
+        "bbox_wh_norm": [
+          0.09385113268608414,
+          0.03369384359400998
+        ]
+      },
+      {
+        "instruction": "Bring your left hand to 'Jug' (ID 22). Use the full depth of the jug for a secure grip.",
+        "hold_id": 22,
+        "type": "Jug",
+        "center_norm": [
+          0.802049622437972,
+          0.4209650582362729
+        ],
+        "bbox_wh_norm": [
+          0.16073354908306364,
+          0.042429284525790346
+        ]
+      },
+      {
+        "instruction": "Move your right foot to 'Sloper' (ID 16). This hold is less positive, so maintain constant pressure on your feet.",
+        "hold_id": 16,
+        "type": "Sloper",
+        "center_norm": [
+          0.9314994606256742,
+          0.8887271214642263
+        ],
+        "bbox_wh_norm": [
+          0.13052858683926646,
+          0.13685524126455906
+        ]
+      },
+      {
+        "instruction": "Extend your right hand to 'Jug' (ID 19). Keep your body tension strong.",
+        "hold_id": 19,
+        "type": "Jug",
+        "center_norm": [
+          0.9288025889967637,
+          0.37562396006655574
+        ],
+        "bbox_wh_norm": [
+          0.12297734627831715,
+          0.03993344425956739
+        ]
+      },
+      {
+        "instruction": "Perform a controlled traverse: move your left hand from 'Jug' (ID 22) across to 'Pocket' (ID 17). This will require a slight body shift to the left.",
+        "hold_id": 17,
+        "type": "Pocket",
+        "center_norm": [
+          0.8042071197411004,
+          0.27558236272878534
+        ],
+        "bbox_wh_norm": [
+          0.11326860841423948,
+          0.03951747088186356
+        ]
+      },
+      {
+        "instruction": "Bring your right foot up and consolidate your position, then reach your right hand to 'Pocket' (ID 8) for the finish.",
+        "hold_id": 8,
+        "type": "Pocket",
+        "center_norm": [
+          0.7944983818770227,
+          0.19072379367720466
+        ],
+        "bbox_wh_norm": [
+          0.10679611650485436,
+          0.040349417637271213
+        ]
+      }
+    ]
+  },
+  "difficulty": {
+    "routeA": {
+      "estimate": "Moderate",
+      "reasoning": "This route starts with crimps, which require good finger strength, but quickly transitions to large jugs, offering good resting points. The large 'Pinch' (ID 0) requires solid grip technique and core strength, while the final 'Pocket' (ID 12) is high up, demanding a dynamic move or good body positioning. The overall spacing is manageable but requires some thoughtful movement."
+    },
+    "routeB": {
+      "estimate": "Hard",
+      "reasoning": "Starting with two 'Sloper' holds for feet demands excellent body tension and friction management, making the initial moves challenging. While the handholds are mostly jugs, the spacing between them for the initial moves (especially from 'Jug' ID 20 to 'Jug' ID 22 and ID 19) appears to require significant reach. The traverse to 'Pocket' (ID 17) requires a controlled shift in body weight. This route emphasizes strong core engagement and sloper technique."
+    }
+  },
+  "notes": "Safety disclaimer: Always check holds for stability before putting full weight on them. These are suggestions, adapt to your body and skill level. Happy climbing!"
+}
