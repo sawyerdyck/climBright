@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ClimbAI – Wall Analysis</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body data-page="wall">
+
+  <header class="navbar">
+    <h1><a class="brand" href="/holds">ClimbAI</a></h1>
+    <nav>
+      <a href="/holds">Hold Classifier</a>
+      <a class="active" href="/wall">Wall Analysis</a>
+    </nav>
+
+    <div class="auth-bar">
+      <span class="auth-status" id="authStatus">Checking session…</span>
+      <button class="btn btn-secondary" id="logoutBtn" hidden>Logout</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h2>Wall Analysis</h2>
+      <p>Upload a wall image and click holds to see details (demo markers for now).</p>
+    </section>
+
+    <section id="wall" class="card">
+      <h3>Wall Route Analyzer</h3>
+      <p>Upload a full wall image, then select individual holds for analysis.</p>
+
+      <div class="upload-box" id="wallUpload">
+        <input type="file" hidden accept="image/*" />
+        <span>Click or drag wall image here</span>
+      </div>
+
+      <div class="wall-controls">
+      <label class="wall-control">
+        Route
+        <select id="routeSelect" class="wall-select" disabled>
+          <option value="routeA">Route A</option>
+          <option value="routeB">Route B</option>
+        </select>
+      </label>
+
+      <label class="wall-check" style="gap:.75rem;">
+       <input type="file" id="routeJsonFile" accept="application/json" />
+       <span>Load Route JSON</span>
+      </label>
+
+      <label class="wall-check">
+        <input type="checkbox" id="toggleBoxes" checked />
+        <span>Boxes</span>
+      </label>
+
+      <label class="wall-check">
+        <input type="checkbox" id="toggleNumbers" checked />
+        <span>Numbers</span>
+      </label>
+
+      <label class="wall-check">
+        <input type="checkbox" id="toggleArrows" checked />
+        <span>Arrows</span>
+      </label>
+    </div>
+
+    <div class="wall-container">
+      <div class="image-wrapper" id="wallImageWrapper">
+        <img id="wallImage" alt="Wall" />
+
+        <!-- NEW: SVG overlay -->
+        <svg id="wallOverlay" class="wall-overlay" aria-label="Wall overlay"></svg>
+
+        <!-- NEW: popover -->
+        <div id="wallPopover" class="wall-popover hidden">
+          <button id="wallPopoverClose" class="wall-popover-close" type="button">×</button>
+          <div class="wall-popover-title" id="wallPopoverTitle">Hold</div>
+          <div class="wall-popover-sub" id="wallPopoverSub">Step</div>
+          <div class="wall-popover-text" id="wallPopoverText">Instruction</div>
+        </div>
+      </div>
+
+        <div class="hold-info">
+          <h4>Selected Hold</h4>
+          <p class="placeholder" id="holdInfoText">Click a hold on the wall to see details.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+
+  <script src="/wall.js"></script>
+</body>
+</html>
