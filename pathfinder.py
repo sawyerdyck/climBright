@@ -191,7 +191,7 @@ def generate_gemini_coach(img: Image.Image, normalized: dict, model: str) -> Opt
             ],
         )
         text = getattr(response, "text", None) or ""
-        return json.loads(text)
+        return response.json()
     except Exception as e:
         sys.stderr.write(f"Gemini request failed; falling back to local coach. Error: {e}\n")
         return None
@@ -217,6 +217,8 @@ def run() -> None:
 
     # IMPORTANT: stdout must be JSON-only for the Node server parser
     print(json.dumps(result))
+
+    return json.dumps(result)
 
 
 if __name__ == "__main__":

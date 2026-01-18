@@ -47,12 +47,13 @@ app.get("/", (_req, res) => res.redirect("/login"));
 app.get("/login", (_req, res) => res.sendFile(path.join(__dirname, "login.html")));
 app.get("/register", (_req, res) => res.sendFile(path.join(__dirname, "register.html")));
 app.get("/holds", (_req, res) => res.sendFile(path.join(__dirname, "holds.html")));
-app.get("/wall", (_req, res) => res.sendFile(path.join(__dirname, "wall.html")));
+app.get("/wall", (_req, res) => res.sendFile(path.join(__dirname, "wall_test.html")));
 
 app.get("/styles.css", (_req, res) => res.sendFile(path.join(__dirname, "styles.css")));
+app.get("/styles_test.css", (_req, res) => res.sendFile(path.join(__dirname, "styles_test.css")));
 app.get("/auth.js", (_req, res) => res.sendFile(path.join(__dirname, "auth.js")));
 app.get("/holds.js", (_req, res) => res.sendFile(path.join(__dirname, "holds.js")));
-app.get("/wall.js", (_req, res) => res.sendFile(path.join(__dirname, "wall.js")));
+app.get("/wall_test.js", (_req, res) => res.sendFile(path.join(__dirname, "wall_test.js")));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/images", requireAuth, imageRoutes);

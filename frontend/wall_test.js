@@ -61,6 +61,7 @@ const routeJsonFile = document.getElementById("routeJsonFile");
 
 let currentHolds = [];
 let currentCoach = null;
+let currentPreviewUrl = null;
 
 function setInfoHtml(html) {
   if (!holdInfoText) return;
@@ -301,6 +302,17 @@ function renderOverlay(holds, coach) {
   }
 }
 
+function waitForWallImage(callback) {
+  if (!wallImage) return;
+  if (wallImage.complete && wallImage.naturalWidth) {
+    callback();
+    return;
+  }
+  wallImage.onload = () => {
+    callback();
+  };
+}
+
 
 function selectHold(hold) {
   const conf = typeof hold.confidence === "number" ? hold.confidence : Number(hold.confidence || 0);
@@ -340,6 +352,15 @@ async function analyzeWall(file) {
   if (holdInfoText) {
     holdInfoText.classList.add("placeholder");
     holdInfoText.textContent = "Analyzing wall…";
+  }
+
+  if (wallImage) {
+    if (currentPreviewUrl) {
+      URL.revokeObjectURL(currentPreviewUrl);
+      currentPreviewUrl = null;
+    }
+    currentPreviewUrl = URL.createObjectURL(file);
+    wallImage.src = currentPreviewUrl;
   }
 
   const imageBase64 = await fileToBase64(file);
@@ -386,14 +407,10 @@ async function analyzeWall(file) {
 
   currentCoach = result.coach || null;
 
-  // Wait for the image to load so we know dimensions
-  wallImage.onload = () => {
-    const w = wallImage.naturalWidth || wallImage.width;
-    const h = wallImage.naturalHeight || wallImage.height;
+  waitForWallImage(() => {
     renderOverlay(currentHolds, currentCoach);
     showCoachSummary(currentCoach);
-  };
-  wallImage.src = URL.createObjectURL(file);
+  });
 }
 
 function setupWallImageUpload() {
@@ -440,7 +457,7 @@ async function readJsonFile(file) {
 async function loadTestImageAndJson(jsonFileObj) {
   // 1) Hardcode image path (put this image in /public or same static folder)
   // Example: /assets/walls/altitude2_classified.jpg
-  const TEST_IMAGE_URL = "/altitude2_classified.jpg";
+  const TEST_IMAGE_URL = "../test_data_sd/altitude2_classified.jpg";
 
   // 2) Load JSON from uploaded file
   const coach = await readJsonFile(jsonFileObj);
@@ -451,10 +468,10 @@ async function loadTestImageAndJson(jsonFileObj) {
   currentHolds = []; // optional
 
   // 4) Wait for image to load, then render
-  wallImage.onload = () => {
+  waitForWallImage(() => {
     renderOverlay(currentHolds, currentCoach);
     showCoachSummary(currentCoach);
-  };
+  });
   wallImage.src = TEST_IMAGE_URL;
 
   // enable route controls since we have coach json
