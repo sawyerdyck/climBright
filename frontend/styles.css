@@ -317,7 +317,7 @@ main {
   position: relative;
   width: 100%;
   border-radius: var(--radius-sm);
-  overflow: hidden;
+  overflow: visible;
   background: var(--input-bg);
   min-height: 200px;
 }

@@ -203,6 +203,7 @@ function renderHolds(holds, imgW, imgH) {
     marker.className = "hold-marker";
     marker.style.left = `${(cx / imgW) * 100}%`;
     marker.style.top = `${(cy / imgH) * 100}%`;
+    marker.title = `Hold ${hold.id} — ${hold.type || "Unknown"}`;
     marker.addEventListener("click", () => selectHold(hold));
     wallWrapper.appendChild(marker);
   });
