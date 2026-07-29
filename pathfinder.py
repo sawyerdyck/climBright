@@ -130,8 +130,7 @@ def build_route_greedy(holds: List[dict], max_reach: float, prefer_direct: bool 
         used.add(best["id"])
         current = best
 
-    # Reverse so route goes bottom-to-top in display order (step 1 = bottom)
-    route.reverse()
+    # Route is built bottom-to-top: step 1 = bottom (start), last step = top (finish)
     return route
 
 
