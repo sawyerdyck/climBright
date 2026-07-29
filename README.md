@@ -1,213 +1,232 @@
 # climBright
-An App for rock climbers.
-- Upload images of climbing holds to classify them.
-- Upload wall photos to detect holds and get climbing route suggestions.
-- Built with FastAPI, MongoDB, YOLOv8, ConvNeXt, and many climbing enthusiasts.
+
+AI-powered rock climbing analysis app.
+
+- **Hold Buddy** — Upload images of climbing holds to classify grip types (crimp, jug, sloper, etc.) with bounding box overlays showing detected holds.
+- **Wall Analysis** — Upload wall photos to detect all holds, classify them, and get AI-generated climbing route suggestions with step-by-step coaching.
+- Built with FastAPI, MongoDB, YOLOv8, ConvNeXt, Express, and Gemini AI.
 
 <div style="display: flex; flex-wrap: wrap;">
-  <img src="images/Screenshot 2026-01-31 194827.png" alt="easy 5 crimps" style="width: 50%; padding: 5px;">
-  <img src="images/Screenshot 2026-01-31 195233.png" alt="altitude route" style="width: 50%; padding: 5px;">
+  <img src="images/Screenshot 2026-01-31 194827.png" alt="Hold classification" style="width: 50%; padding: 5px;">
+  <img src="images/Screenshot 2026-01-31 195233.png" alt="Wall route analysis" style="width: 50%; padding: 5px;">
 </div>
 
-## Run Everything (Local)
+## Features
 
-### 0) Prereqs
-- MongoDB server (`mongod`)
-    - macOS: `brew install mongodb-community@7.0`
-    - Windows: `choco install mongodb`
-- Python 3.10+ and Node 18+
+- YOLOv8 hold detection with bounding boxes
+- ConvNeXt-based grip type classification
+- Reach-constrained greedy route pathfinding (local) or Gemini AI coaching
+- Dark/light mode with system preference detection
+- Responsive design (mobile-friendly)
+- User authentication (JWT sessions)
 
-### 1) Put model weights in place
-- ConvNeXt classifier: place `best_convnext_two_phase.pt` in this folder (same level as `main.py`).
-- YOLO detector weights: default path is `runs/detect/train2/weights/best.pt`.
+## Quick Start (Local)
 
-If your files live somewhere else, set env vars when starting FastAPI:
-- `CONVNEXT_MODEL_PATH=/absolute/path/to/best_convnext_two_phase.pt`
-- `YOLO_MODEL_PATH=/absolute/path/to/best.pt`
+### Prerequisites
 
-### Note: Make a python venv (optional but recommended)
+- **MongoDB** (`mongod`) — [Install guide](https://www.mongodb.com/docs/manual/installation/)
+- **Python 3.10+** with pip
+- **Node.js 18+** with npm
 
-MacOS / Linux
+### 1. Model weights
+
+Place these files in the repo root:
+
+| Model | Default path | Env var override |
+|-------|-------------|-----------------|
+| ConvNeXt classifier | `best_convnext_two_phase.pt` | `CONVNEXT_MODEL_PATH` |
+| YOLO detector | `runs/detect/train2/weights/best.pt` | `YOLO_MODEL_PATH` |
+
+### 2. Python environment
+
 ```bash
-python3 -m venv venv
-source venv/bin/activate  # macOS/Linux
+python -m venv env
+
+# macOS/Linux
+source env/bin/activate
+
+# Windows PowerShell
+.\env\Scripts\Activate.ps1
 ```
 
-Windows
 ```bash
-python -m venv venv
-venv\Scripts\activate.ps1 # Windows PowerShell
+pip install -r requirements.txt
 ```
 
-### 2) Install Python deps
-```bash
-pip3 install -r requirements.txt
-```
+### 3. Start MongoDB
 
-### 3) Start MongoDB (Terminal 1)
 ```bash
 mongod --dbpath ./db/mongo --bind_ip 127.0.0.1 --port 2701
 ```
 
-### 4) Start FastAPI on port 9000 (Terminal 2)
+### 4. Start FastAPI (AI model server)
+
 ```bash
 uvicorn main:app --reload --port 9000
 ```
 
-### 5) Start the web app (Terminal 3)
+### 5. Start the web app
+
 ```bash
 cd frontend
 npm install
-npm run start
 ```
 
-# MAKE SURE TO ADD A .env FILE IN THE FRONTEND FOLDER
+Create `frontend/.env`:
 
-Open:
-- `http://127.0.0.1:3000/`
+```env
+MONGODB_URI=mongodb://127.0.0.1:2701/climbright
+FASTAPI_URL=http://127.0.0.1:9000/classifier/upload
+JWT_SECRET=your-secret-here
+PORT=3000
+```
 
-### 6) Smoke test
+```bash
+npm start
+```
+
+Open **http://127.0.0.1:3000/** — register an account and start uploading.
+
+### 6. Smoke test
+
 - Register / log in
-- Go to `/holds` and upload a JPG/PNG
-- Go to `/wall` and upload a wall photo; you should see hold markers + a coach response
+- Go to `/holds` and upload a JPG/PNG — you should see bounding boxes and classification results
+- Go to `/wall` and upload a wall photo — you should see hold markers, route overlay, and a coach summary
 
-Optional API test (replace `sample.jpg`):
+Optional API test:
+
 ```bash
 B64=$(base64 -i sample.jpg | tr -d '\n')
 curl -s http://127.0.0.1:9000/classifier/upload \
-	-H 'Content-Type: application/json' \
-	-d "{\"filename\":\"sample.jpg\",\"content_type\":\"image/jpeg\",\"data\":\"$B64\"}" \
-	| python3 -m json.tool
+  -H 'Content-Type: application/json' \
+  -d "{\"filename\":\"sample.jpg\",\"content_type\":\"image/jpeg\",\"data\":\"$B64\"}" \
+  | python -m json.tool
 ```
 
 ---
-Model architecture and training instructions
 
-architecture used:
-2/3 layer approach:
-1. yolo v8 detector to find holds in an image
-    - crop onto the detected holds from the image, via yolov8 bounding boxes labels.
-2. use a convnext classifier to classify the cropped hold images into their respective classes.
-    - return the results.
+## Architecture
 
-additional:
-
-3. path-finding algorithm to find a climbing path from the detected holds and their classifications.
-    - needs all previously mentioned steps to be done on the image.
-
-
----
-Train a model to classify climbing holds from images
-
-Take the dataset "indoor-climbing-gym-hold-classification-dataset" from kaggle and extract the images and labels.
-
-https://www.kaggle.com/datasets/diegospaziani/indoor-climbing-gym-hold-classification-dataset/data
-
-use "convert-to-folders.py" to convert the dataset into a folder structure that can be used by the training scripts.
-
-to create the model.
-
-1. train a convnext classifier model on the climbing hold images.
-- run "two_phases_train.py" 
-    - uses the preprocessed dataset in folder structure. called "holds_cls". must be in the same directory as the script.
-    - this script will train a convnext model in two phases:
-        - phase 1: train only the classifier head for x epochs.
-        - phase 2: fine-tune the entire model for y epochs.
-
-    - x, y are adjustable hyperparameters in the script.
-
-to run inference on a single image using ONLY the convnext
-validator script:
-``` Bash
-python predict.py -m 'path/to/your/model.pt' -i 'path/to/your/images/'
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│   Browser    │────▶│   Express    │────▶│   MongoDB    │
+│  (frontend)  │     │  (port 3000) │     │ (port 2701)  │
+└──────┬───────┘     └──────────────┘     └──────────────┘
+       │
+       │  image upload (base64)
+       ▼
+┌──────────────┐
+│   FastAPI    │  YOLOv8 detect → ConvNeXt classify
+│  (port 9000) │
+└──────────────┘
+       │
+       ▼
+┌──────────────┐
+│  Pathfinder  │  Gemini AI coach (if API key set)
+│  (Python)    │  or local greedy routing fallback
+└──────────────┘
 ```
 
+### Model Pipeline
 
-2. train the detector (yolov8) model from scratch on a dataset of climbing hold images.
+1. **YOLOv8 detector** — finds hold bounding boxes in the image
+2. **ConvNeXt classifier** — classifies each cropped hold into grip types
+3. **Pathfinder** — generates climbing routes from detected holds:
+   - **Gemini mode** (if `GEMINI_API_KEY` set): sends image + hold data to Gemini for coaching
+   - **Local mode** (fallback): reach-constrained greedy routing with difficulty scoring
 
+### Pathfinder Algorithm (Local)
 
-``` Bash   
-yolo detect train model=yolov8n.pt data=data.yaml imgsz=640 epochs=50 batch=16 device=gpu  # use cpu if no gpu: device=cpu
-```
-
-validate the trained detector model
-``` Bash
-yolo detect val model=runs/detect/train/weights/best.pt data=data.yaml imgsz=640
-```
-
-inference on a raw image using ONLY the yolo detector
-``` Bash
-yolo detect predict model=runs/detect/train/weights/best.pt source="path/to/your/raw_folder" imgsz=640 save_txt save_conf
-```
-
-data.yaml - describes the types of things to look for in the detector model(yolo)
+- Greedy bottom-to-top traversal within realistic reach distance (0.30 normalized)
+- Lateral movement penalized to prefer direct upward paths
+- Route B uses harder hold types with bigger reach allowance
+- Difficulty scored from hold-type weights + gap distances + lateral variance
 
 ---
 
-run 2 layer model on images to detect and classify holds:
-``` Bash
-python detect_and_classify.py -i "path/to/raw_image.jpg " -y "path/to/yolo/detector-model.pt" -c "path/to/convnext/classifier-model.pt"
-```
+## Training Models
 
-Options:
+### ConvNeXt Hold Classifier
 
-* -i / --image: path to input image
-* -y / --yolo: Path to YOLO model (default: runs/detect/train2/weights/best.pt) 
-* -c / --classifier: Path to ConvNeXt model (default: best_convnext_two_phase.pt)
-* --conf: YOLO confidence threshold (default: 0.25)
-* --padding: Box padding fraction (default: 0.15 = 15%)
-* --no-save: Skip saving visualization
+Dataset: [Indoor Climbing Gym Hold Classification](https://www.kaggle.com/datasets/diegospaziani/indoor-climbing-gym-hold-classification-dataset/data)
 
-Outputs annotated image with ConvNeXt predictions + confidence scores.
+```bash
+# Convert dataset to folder structure
+python convert_to_folders.py
 
---- 
-Optional script:
-Use YOLO to crop all your YOLO-labeled images, creating a new dataset structured for classifier fine-tuning.
-
-``` Bash
-python generate_crops_for_finetuning.py
-    -t 'path/to/yolo/labeled/images/' 
-    -y 'path/to/yolo/detector-model' 
-    -o 'path/to/output/cropped/dataset/'
-```
-
-change the paths as needed when running the script for finetuning dataset generation. "DATA_DIR = "holds_cls_finetuned""
-
-also change this line in the "two_phases_train.py" script to use the new dataset for finetuning:
-``` Python
-lr=5e-5,  # lower LR for fine-tuning
-```
-
-After generating the new cropped dataset, run the "two_phases_train.py" script to finetune the convnext classifier on the new dataset.
-``` Bash
+# Train (two-phase: frozen head → full fine-tune)
 python two_phase_train.py
 ```
 
+### YOLOv8 Hold Detector
+
+```bash
+yolo detect train model=yolov8n.pt data=data.yaml imgsz=640 epochs=50 batch=16 device=gpu
+```
+
+### Combined Inference
+
+```bash
+python detect_and_classify.py -i "path/to/image.jpg" -y "path/to/yolo.pt" -c "path/to/convnext.pt"
+```
+
+Options: `-i` image, `-y` YOLO model, `-c` ConvNeXt model, `--conf` threshold, `--padding` box padding, `--no-save` skip visualization.
+
 ---
 
-to detect and classify holds in an image:
-``` Bash
-python detect_and_classify.py -i 'path/to/your/images/' -y 'path/to/yolo/detector-model' -c 'path/to/your/classifier-model'
+## Project Structure
+
+```
+climBright/
+├── main.py                  # FastAPI app entry point
+├── routers/classifier.py    # /classifier/upload endpoint
+├── pathfinder.py            # Route generation (Gemini + local fallback)
+├── detect_and_classify.py   # YOLOv8 + ConvNeXt pipeline
+├── two_phase_train.py       # ConvNeXt training script
+├── requirements.txt         # Python dependencies
+├── frontend/
+│   ├── server.js            # Express server (auth, static, API proxy)
+│   ├── holds.html/js        # Hold Buddy page
+│   ├── wall.html/js         # Wall Analysis page
+│   ├── login.html           # Login page
+│   ├── register.html        # Registration page
+│   ├── styles.css           # Dark/light theme CSS
+│   ├── theme.js             # Theme toggle logic
+│   ├── auth.js              # Auth form handlers
+│   ├── favicon.svg          # App favicon
+│   ├── .env                 # Environment config (not committed)
+│   └── src/
+│       ├── routes/          # Express API routes (auth, images, wall)
+│       ├── models/          # Mongoose schemas
+│       └── middleware/      # JWT auth middleware
+└── runs/detect/             # YOLO training outputs
 ```
 
 ---
-# Requirements
-- see requirements.txt
 
-```Bash
-pip install -r requirements.txt
-```
+## Environment Variables
+
+### Frontend (`frontend/.env`)
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `MONGODB_URI` | MongoDB connection string | Yes |
+| `FASTAPI_URL` | FastAPI classifier endpoint URL | Yes |
+| `JWT_SECRET` | Secret for JWT session tokens | Yes |
+| `PORT` | Express server port (default: 3000) | No |
+| `FRONTEND_ORIGIN` | Allowed CORS origin | No |
+
+### Backend (root `.env` or shell)
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `GEMINI_API_KEY` / `GOOGLE_API_KEY` | Enables Gemini AI coaching | No |
+| `CONVNEXT_MODEL_PATH` | Path to ConvNeXt weights | No (defaults to `best_convnext_two_phase.pt`) |
+| `YOLO_MODEL_PATH` | Path to YOLO weights | No (defaults to `runs/detect/train2/weights/best.pt`) |
+| `PYTHON_BIN` | Python binary for pathfinder subprocess | No |
 
 ---
-# Web API #
-- The model has a web API using FastAPI.
 
-To turn on a web API server using FastAPI on port 9000:
-``` Bash 
-uvicorn main:app --reload --port 9000 
-```
-MAKE SURE TO ADD PYTHONPATH IF NEEDED:
-``` Bash
-$env:PYTHON_BIN = "C:\Users\sunna\Code\uottahacks\env\Scripts\python.exe"
-```
+## License
 
+See [LICENSE](LICENSE).
