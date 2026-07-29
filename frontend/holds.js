@@ -1,4 +1,4 @@
-const API_BASE = ""; // same origin as the Express server
+const API_BASE = "";
 
 async function getFastApiUrl() {
   const res = await fetch("/config.json", { credentials: "include" });
@@ -13,9 +13,7 @@ async function apiJson(path, options = {}) {
     ...options,
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data.error || `Request failed (${res.status})`);
-  }
+  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
   return data;
 }
 
@@ -33,7 +31,6 @@ async function requireSessionOrRedirect() {
         window.location.href = "/login";
       });
     }
-
     return data.user;
   } catch {
     window.location.href = "/login";
@@ -41,19 +38,45 @@ async function requireSessionOrRedirect() {
   }
 }
 
-function setHoldResult(text, isError = false) {
-  const el = document.getElementById("holdResultText");
-  if (!el) return;
-  el.classList.toggle("placeholder", !isError);
-  el.style.color = isError ? "#ff7b72" : "";
-  el.textContent = text;
+// --- Result display ---
+const resultText = document.getElementById("holdResultText");
+const holdList = document.getElementById("holdList");
+
+function showLoading() {
+  if (resultText) {
+    resultText.classList.remove("placeholder");
+    resultText.innerHTML = '<span class="spinner"></span><span class="loading-text">Analyzing hold…</span>';
+  }
+  if (holdList) holdList.hidden = true;
 }
 
+function showResult(text, isError = false) {
+  if (!resultText) return;
+  resultText.classList.toggle("placeholder", false);
+  resultText.style.color = isError ? "var(--danger)" : "";
+  resultText.textContent = text;
+}
+
+function showHoldsList(holds, bestIdx) {
+  if (!holdList || !holds.length) return;
+  holdList.hidden = false;
+  holdList.innerHTML = holds.map((h, i) => {
+    const label = getHoldLabel(h);
+    const conf = getHoldConfidence(h);
+    const pct = (conf <= 1 ? conf * 100 : conf).toFixed(1);
+    const isBest = i === bestIdx;
+    return `<li class="${isBest ? "best" : ""}">
+      <span class="hold-label">${label}${isBest ? " ★" : ""}</span>
+      <span class="hold-conf">${pct}%</span>
+    </li>`;
+  }).join("");
+}
+
+// --- Upload / Preview ---
 function handlePreview(input, preview) {
   preview.innerHTML = "";
   const file = input.files[0];
   if (!file) return;
-
   const img = document.createElement("img");
   img.src = URL.createObjectURL(file);
   preview.appendChild(img);
@@ -61,6 +84,7 @@ function handlePreview(input, preview) {
 
 function setupUpload(boxId, previewId, onFileSelected) {
   const box = document.getElementById(boxId);
+  if (!box) return;
   const input = box.querySelector("input");
   const preview = document.getElementById(previewId);
 
@@ -68,30 +92,28 @@ function setupUpload(boxId, previewId, onFileSelected) {
 
   box.addEventListener("dragover", (e) => {
     e.preventDefault();
-    box.style.borderColor = "#3ddc97";
+    box.classList.add("dragover");
   });
 
-  box.addEventListener("dragleave", () => {
-    box.style.borderColor = "#30363d";
-  });
+  box.addEventListener("dragleave", () => box.classList.remove("dragover"));
 
   box.addEventListener("drop", async (e) => {
     e.preventDefault();
+    box.classList.remove("dragover");
     input.files = e.dataTransfer.files;
     handlePreview(input, preview);
-    box.style.borderColor = "#30363d";
-
     const file = input.files?.[0];
-    if (file && typeof onFileSelected === "function") await onFileSelected(file);
+    if (file) await onFileSelected(file);
   });
 
   input.addEventListener("change", async () => {
     handlePreview(input, preview);
     const file = input.files?.[0];
-    if (file && typeof onFileSelected === "function") await onFileSelected(file);
+    if (file) await onFileSelected(file);
   });
 }
 
+// --- Helpers ---
 async function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -107,8 +129,7 @@ async function fileToBase64(file) {
 
 function getHoldConfidence(hold) {
   if (!hold || typeof hold !== "object") return 0;
-  const candidates = [hold.confidence, hold.conf, hold.score, hold.prob, hold.probability];
-  for (const v of candidates) {
+  for (const v of [hold.confidence, hold.conf, hold.score, hold.prob, hold.probability]) {
     const n = Number(v);
     if (!Number.isNaN(n)) return n;
   }
@@ -120,46 +141,30 @@ function getHoldLabel(hold) {
   return hold.type || hold.label || hold.name || hold.class || hold.grip_type || hold.gripType || "Unknown";
 }
 
-function pickBestHold(holds) {
-  if (!Array.isArray(holds) || holds.length === 0) return null;
-  let best = holds[0];
-  let bestC = getHoldConfidence(best);
-  for (const h of holds.slice(1)) {
-    const c = getHoldConfidence(h);
-    if (c > bestC) {
-      best = h;
-      bestC = c;
-    }
-  }
-  return best;
-}
-
+// --- Main analysis ---
 async function analyzeAndStoreHoldImage(file) {
-  // Only allow JPEG / PNG (works for click-select + drag/drop)
-  const allowedMime = new Set(["image/jpeg", "image/png"]);
   const ext = (file?.name || "").toLowerCase();
   const hasAllowedExt = ext.endsWith(".jpg") || ext.endsWith(".jpeg") || ext.endsWith(".png");
-  const hasAllowedMime = allowedMime.has(file?.type);
+  const hasAllowedMime = file?.type === "image/jpeg" || file?.type === "image/png";
 
-  // Some browsers/flows may give an empty MIME type; fall back to extension check.
   if (!hasAllowedMime && !(file?.type === "" && hasAllowedExt)) {
-    setHoldResult("Only JPG/JPEG or PNG files are allowed.", true);
+    showResult("Only JPG/JPEG or PNG files are allowed.", true);
     return;
   }
 
   const fastapiUrl = await getFastApiUrl();
   if (!fastapiUrl) {
-    setHoldResult("FASTAPI_URL is not configured. Set it in frontend/.env and restart the web server.", true);
+    showResult("FASTAPI_URL is not configured. Set it in frontend/.env and restart the web server.", true);
     return;
   }
 
-  setHoldResult("Encoding image and calling AI...");
+  showLoading();
 
   let imageBase64;
   try {
     imageBase64 = await fileToBase64(file);
   } catch {
-    setHoldResult("Failed to convert image to base64.", true);
+    showResult("Failed to read file.", true);
     return;
   }
 
@@ -174,26 +179,31 @@ async function analyzeAndStoreHoldImage(file) {
         data: imageBase64,
       }),
     });
-
     aiJson = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(aiJson?.detail || aiJson?.error || `AI request failed (${res.status})`);
   } catch (err) {
-    setHoldResult(`AI error: ${err.message}`, true);
-    // still attempt to store the upload (without AI result) below
+    showResult(`AI error: ${err.message}`, true);
   }
 
-  const holds = aiJson?.holds;
-  const bestHold = pickBestHold(holds);
+  const holds = Array.isArray(aiJson?.holds) ? aiJson.holds : [];
 
-  if (bestHold) {
-    const c = getHoldConfidence(bestHold);
-    const label = getHoldLabel(bestHold);
-    const pct = c <= 1 ? c * 100 : c;
-    setHoldResult(`Best match: ${label} (${pct.toFixed(1)}% confidence)`);
+  if (holds.length > 0) {
+    // Find best
+    let bestIdx = 0;
+    let bestConf = getHoldConfidence(holds[0]);
+    for (let i = 1; i < holds.length; i++) {
+      const c = getHoldConfidence(holds[i]);
+      if (c > bestConf) { bestIdx = i; bestConf = c; }
+    }
+    const best = holds[bestIdx];
+    const pct = (bestConf <= 1 ? bestConf * 100 : bestConf).toFixed(1);
+    showResult(`Best match: ${getHoldLabel(best)} (${pct}% confidence)`);
+    showHoldsList(holds, bestIdx);
   } else if (aiJson) {
-    setHoldResult("AI responded, but no holds were returned.", true);
+    showResult("AI responded, but no holds detected in this image.", true);
   }
 
+  // Store in backend (non-fatal)
   try {
     await apiJson("/api/images", {
       method: "POST",
@@ -203,15 +213,12 @@ async function analyzeAndStoreHoldImage(file) {
         mimeType: file.type,
         aiEndpoint: fastapiUrl,
         aiResponseRaw: aiJson,
-        holds: Array.isArray(holds)
-          ? holds.map((h) => ({ raw: h, confidence: getHoldConfidence(h) }))
-          : [],
-        bestHold: bestHold || null,
+        holds: holds.map((h) => ({ raw: h, confidence: getHoldConfidence(h) })),
+        bestHold: holds.length > 0 ? holds[0] : null,
       }),
     });
-  } catch (err) {
-    // non-fatal: the user still got the AI result
-    if (aiJson) setHoldResult(`Saved analysis, but store failed: ${err.message}`, true);
+  } catch {
+    // non-fatal
   }
 }
 
