@@ -266,6 +266,13 @@ main {
   border-radius: 6px;
   border: 1px solid var(--border);
   font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.hold-list li:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
 }
 
 .hold-list li.best {
@@ -305,7 +312,8 @@ main {
   border-radius: var(--radius-sm);
 }
 
-#wallOverlay {
+#wallOverlay,
+#holdOverlay {
   position: absolute;
   inset: 0;
   width: 100%;

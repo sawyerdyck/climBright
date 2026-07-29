@@ -37,7 +37,12 @@
         <span>Click or drag an image here</span>
       </div>
 
-      <div class="preview" id="holdPreview"></div>
+      <div class="preview" id="holdPreview">
+        <div class="image-wrapper" id="holdImageWrapper" hidden>
+          <img id="holdImage" alt="Uploaded hold" />
+          <svg id="holdOverlay" aria-hidden="true"></svg>
+        </div>
+      </div>
 
       <div class="result-box" id="holdResultBox">
         <h4>Classification Result</h4>

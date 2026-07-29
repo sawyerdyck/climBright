@@ -38,10 +38,14 @@ async function requireSessionOrRedirect() {
   }
 }
 
-// --- Result display ---
+// --- DOM refs ---
 const resultText = document.getElementById("holdResultText");
 const holdList = document.getElementById("holdList");
+const holdImage = document.getElementById("holdImage");
+const holdImageWrapper = document.getElementById("holdImageWrapper");
+const holdOverlay = document.getElementById("holdOverlay");
 
+// --- Result display ---
 function showLoading() {
   if (resultText) {
     resultText.classList.remove("placeholder");
@@ -65,28 +69,111 @@ function showHoldsList(holds, bestIdx) {
     const conf = getHoldConfidence(h);
     const pct = (conf <= 1 ? conf * 100 : conf).toFixed(1);
     const isBest = i === bestIdx;
-    return `<li class="${isBest ? "best" : ""}">
+    return `<li class="${isBest ? "best" : ""}" data-hold-idx="${i}">
       <span class="hold-label">${label}${isBest ? " ★" : ""}</span>
       <span class="hold-conf">${pct}%</span>
     </li>`;
   }).join("");
+
+  // Hover on list item highlights the bbox
+  holdList.querySelectorAll("li").forEach((li) => {
+    li.addEventListener("mouseenter", () => highlightHold(Number(li.dataset.holdIdx)));
+    li.addEventListener("mouseleave", () => highlightHold(-1));
+  });
+}
+
+// --- Bounding box overlay ---
+function svgEl(tag, attrs = {}) {
+  const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
+  return el;
+}
+
+function clearOverlay() {
+  if (!holdOverlay) return;
+  while (holdOverlay.firstChild) holdOverlay.removeChild(holdOverlay.firstChild);
+}
+
+// Colors for different holds
+const HOLD_COLORS = [
+  "#3ddc97", "#f0b429", "#ff7b72", "#79c0ff", "#d2a8ff",
+  "#ffa657", "#7ee787", "#ff9bce", "#a5d6ff", "#ffd700",
+];
+
+let drawnRects = [];
+
+function drawBoundingBoxes(holds, imgW, imgH) {
+  if (!holdOverlay || !imgW || !imgH) return;
+  clearOverlay();
+  drawnRects = [];
+
+  holdOverlay.setAttribute("viewBox", `0 0 ${imgW} ${imgH}`);
+  holdOverlay.setAttribute("preserveAspectRatio", "xMidYMid meet");
+
+  holds.forEach((hold, i) => {
+    const bbox = hold.bbox || hold.box;
+    if (!Array.isArray(bbox) || bbox.length !== 4) return;
+
+    const [x1, y1, x2, y2] = bbox;
+    const color = HOLD_COLORS[i % HOLD_COLORS.length];
+
+    // Bounding box rect
+    const rect = svgEl("rect", {
+      x: x1, y: y1, width: x2 - x1, height: y2 - y1,
+      fill: "none", stroke: color, "stroke-width": 3,
+      rx: 4, opacity: 0.85,
+    });
+    rect.dataset.idx = i;
+    holdOverlay.appendChild(rect);
+
+    // Label background
+    const label = getHoldLabel(hold);
+    const labelText = `${label}`;
+    const fontSize = Math.max(12, Math.min(18, (x2 - x1) * 0.15));
+    const padding = 4;
+    const textY = y1 > fontSize + padding * 2 ? y1 - padding : y2 + fontSize + padding;
+
+    const bg = svgEl("rect", {
+      x: x1, y: textY - fontSize, width: label.length * fontSize * 0.6 + padding * 2, height: fontSize + padding,
+      fill: color, rx: 3, opacity: 0.9,
+    });
+    holdOverlay.appendChild(bg);
+
+    const text = svgEl("text", {
+      x: x1 + padding, y: textY - padding,
+      "font-size": fontSize, "font-weight": 600, fill: "#0e1117",
+    });
+    text.textContent = labelText;
+    holdOverlay.appendChild(text);
+
+    drawnRects.push({ rect, bg, text, color });
+  });
+}
+
+function highlightHold(idx) {
+  drawnRects.forEach((item, i) => {
+    const isHighlighted = i === idx;
+    item.rect.setAttribute("stroke-width", isHighlighted ? 5 : 3);
+    item.rect.setAttribute("opacity", idx === -1 ? 0.85 : isHighlighted ? 1 : 0.35);
+    item.bg.setAttribute("opacity", idx === -1 ? 0.9 : isHighlighted ? 1 : 0.3);
+    item.text.setAttribute("opacity", idx === -1 ? 1 : isHighlighted ? 1 : 0.3);
+  });
 }
 
 // --- Upload / Preview ---
-function handlePreview(input, preview) {
-  preview.innerHTML = "";
+function handlePreview(input) {
   const file = input.files[0];
-  if (!file) return;
-  const img = document.createElement("img");
-  img.src = URL.createObjectURL(file);
-  preview.appendChild(img);
+  if (!file || !holdImage || !holdImageWrapper) return;
+
+  holdImageWrapper.hidden = false;
+  holdImage.src = URL.createObjectURL(file);
+  clearOverlay();
 }
 
-function setupUpload(boxId, previewId, onFileSelected) {
+function setupUpload(boxId, onFileSelected) {
   const box = document.getElementById(boxId);
   if (!box) return;
   const input = box.querySelector("input");
-  const preview = document.getElementById(previewId);
 
   box.addEventListener("click", () => input.click());
 
@@ -101,13 +188,13 @@ function setupUpload(boxId, previewId, onFileSelected) {
     e.preventDefault();
     box.classList.remove("dragover");
     input.files = e.dataTransfer.files;
-    handlePreview(input, preview);
+    handlePreview(input);
     const file = input.files?.[0];
     if (file) await onFileSelected(file);
   });
 
   input.addEventListener("change", async () => {
-    handlePreview(input, preview);
+    handlePreview(input);
     const file = input.files?.[0];
     if (file) await onFileSelected(file);
   });
@@ -197,8 +284,19 @@ async function analyzeAndStoreHoldImage(file) {
     }
     const best = holds[bestIdx];
     const pct = (bestConf <= 1 ? bestConf * 100 : bestConf).toFixed(1);
-    showResult(`Best match: ${getHoldLabel(best)} (${pct}% confidence)`);
+    showResult(`${holds.length} hold${holds.length > 1 ? "s" : ""} detected. Best: ${getHoldLabel(best)} (${pct}%)`);
     showHoldsList(holds, bestIdx);
+
+    // Draw bounding boxes on the image once it's loaded
+    if (holdImage) {
+      const drawBoxes = () => {
+        const imgW = holdImage.naturalWidth || holdImage.width;
+        const imgH = holdImage.naturalHeight || holdImage.height;
+        if (imgW && imgH) drawBoundingBoxes(holds, imgW, imgH);
+      };
+      if (holdImage.complete && holdImage.naturalWidth) drawBoxes();
+      else holdImage.addEventListener("load", drawBoxes, { once: true });
+    }
   } else if (aiJson) {
     showResult("AI responded, but no holds detected in this image.", true);
   }
@@ -224,5 +322,5 @@ async function analyzeAndStoreHoldImage(file) {
 
 (async function init() {
   await requireSessionOrRedirect();
-  setupUpload("holdUpload", "holdPreview", analyzeAndStoreHoldImage);
+  setupUpload("holdUpload", analyzeAndStoreHoldImage);
 })();
