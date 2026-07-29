@@ -22,6 +22,29 @@ AI-powered rock climbing analysis app.
 
 ## Quick Start (Local)
 
+### One-command start
+
+```powershell
+# Windows PowerShell
+.\start.ps1
+
+# Stop everything
+.\stop.ps1
+```
+
+```bash
+# macOS / Linux
+chmod +x start.sh stop.sh
+./start.sh
+
+# Stop everything
+./stop.sh
+```
+
+This boots MongoDB, FastAPI (AI models), and Express (frontend) in one go. Open **http://127.0.0.1:3000/** when it reports all services running.
+
+### Manual start (step by step)
+
 ### Prerequisites
 
 - **MongoDB** (`mongod`) — [Install guide](https://www.mongodb.com/docs/manual/installation/)

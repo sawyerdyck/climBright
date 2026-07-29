@@ -22,3 +22,4 @@ frontend/.env
 # Local databases / uploads
 db/**
 !db/**/.gitkeep
+.pids
