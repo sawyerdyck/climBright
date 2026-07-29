@@ -50,6 +50,7 @@ app.get("/holds", (_req, res) => res.sendFile(path.join(__dirname, "holds.html")
 app.get("/wall", (_req, res) => res.sendFile(path.join(__dirname, "wall.html")));
 
 app.get("/styles.css", (_req, res) => res.sendFile(path.join(__dirname, "styles.css")));
+app.get("/favicon.svg", (_req, res) => res.sendFile(path.join(__dirname, "favicon.svg")));
 app.get("/auth.js", (_req, res) => res.sendFile(path.join(__dirname, "auth.js")));
 app.get("/holds.js", (_req, res) => res.sendFile(path.join(__dirname, "holds.js")));
 app.get("/wall.js", (_req, res) => res.sendFile(path.join(__dirname, "wall.js")));
