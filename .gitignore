@@ -1,16 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+env/
+venv/
+.venv/
+
+# Node
+node_modules/
+package-lock.json
+
+# Model weights (tracked - needed to run the app)
+# Consider Git LFS if repo size becomes an issue
+
+# Datasets
 *.zip
 *.multiclass
 /holds_cls/
-/indoor-climbing-gym-hold-classification-dataset/ 
-/venv
-__pycache__/
-users.db
-users.db-*
-*.db-wal
-*.db-shm
-*.db-journal
-package-lock.json
-node_modules/
+/indoor-climbing-gym-hold-classification-dataset/
 
 # Secrets / local env
 .env
@@ -18,7 +25,15 @@ node_modules/
 frontend/.env
 !*.example
 
-# Local databases / uploads
-db/**
-!db/**/.gitkeep
+# Local databases / uploads / runtime
+db/
 .pids
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
