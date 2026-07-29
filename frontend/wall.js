@@ -263,6 +263,9 @@ function renderCoachSummary(coach) {
 async function analyzeWall(file) {
   if (!file) return;
 
+  // Persist image for cross-page navigation
+  storeImage(file);
+
   showLoading();
   if (wallContainer) wallContainer.hidden = false;
   clearOverlay();
@@ -354,4 +357,12 @@ function setupWallImageUpload() {
 (async function init() {
   await requireSessionOrRedirect();
   setupWallImageUpload();
+
+  // Restore previously uploaded image if navigating from another page
+  const stored = getStoredImage();
+  if (stored && wallImage && wallContainer) {
+    wallImage.src = stored.dataUrl;
+    wallContainer.hidden = false;
+    setInfoHtml('<span style="color:var(--muted)">Previous image restored. Click upload to analyze, or upload a new one.</span>');
+  }
 })();

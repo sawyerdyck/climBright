@@ -230,6 +230,9 @@ function getHoldLabel(hold) {
 
 // --- Main analysis ---
 async function analyzeAndStoreHoldImage(file) {
+  // Persist image for cross-page navigation
+  storeImage(file);
+
   const ext = (file?.name || "").toLowerCase();
   const hasAllowedExt = ext.endsWith(".jpg") || ext.endsWith(".jpeg") || ext.endsWith(".png");
   const hasAllowedMime = file?.type === "image/jpeg" || file?.type === "image/png";
@@ -323,4 +326,11 @@ async function analyzeAndStoreHoldImage(file) {
 (async function init() {
   await requireSessionOrRedirect();
   setupUpload("holdUpload", analyzeAndStoreHoldImage);
+
+  // Restore previously uploaded image if navigating back
+  const stored = getStoredImage();
+  if (stored && holdImage && holdImageWrapper) {
+    holdImage.src = stored.dataUrl;
+    holdImageWrapper.hidden = false;
+  }
 })();
