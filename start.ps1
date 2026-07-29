@@ -3,7 +3,9 @@
 # Stop:  powershell -ExecutionPolicy Bypass -File .\stop.ps1
 
 $ErrorActionPreference = "Continue"
-$root = Split-Path -Parent $MyInvocation.MyCommand.Path
+$root = $PSScriptRoot
+if (-not $root) { $root = Split-Path -Parent $MyInvocation.MyCommand.Path }
+if (-not $root) { $root = (Get-Location).Path }
 
 Write-Host "climBright - Starting services..." -ForegroundColor Cyan
 
