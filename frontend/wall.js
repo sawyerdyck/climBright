@@ -134,11 +134,18 @@ function stepToPoint(step, holds) {
 function drawRoute(steps, holds, style, labelPrefix) {
   if (!steps.length) return;
 
+  const imgW = wallImage.naturalWidth || wallImage.width;
+  const imgH = wallImage.naturalHeight || wallImage.height;
+  const pad = 18; // keep nodes this far from edges so they're visible
+
   const points = [];
   steps.forEach((step, idx) => {
     const pt = stepToPoint(step, holds);
     if (!pt) return;
-    points.push({ ...pt, idx });
+    // Clamp to stay within visible bounds
+    const cx = Math.max(pad, Math.min(imgW - pad, pt.cx));
+    const cy = Math.max(pad, Math.min(imgH - pad, pt.cy));
+    points.push({ cx, cy, idx });
   });
 
   if (!points.length) return;
