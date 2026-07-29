@@ -50,6 +50,12 @@ const coachContent = document.getElementById("coachContent");
 let currentHolds = [];
 let currentCoach = null;
 
+// Route display config
+const ROUTE_STYLES = {
+  A: { color: "rgba(61,220,151,0.9)", dash: "", label: "Route A", labelColor: "#3ddc97" },
+  B: { color: "rgba(255,166,87,0.9)", dash: "12,6", label: "Route B", labelColor: "#ffa657" },
+};
+
 // --- Helpers ---
 async function fileToBase64(file) {
   return new Promise((resolve, reject) => {
@@ -95,25 +101,18 @@ function showLoading() {
 }
 
 // --- Route resolution ---
-function resolveRouteSteps(coach, holds) {
-  if (!coach) return [];
-  for (const name of ["routeA", "route", "routeB"]) {
-    const route = coach[name];
-    if (!route) continue;
-    if (Array.isArray(route.steps)) return route.steps;
-    if (Array.isArray(route)) {
-      return route.map((step, idx) => {
-        if (Array.isArray(step?.bbox)) return step;
-        if (step?.center_norm) return step;
-        const id = step?.id ?? step?.hold_id ?? step?.holdId;
-        if (id === undefined) return null;
-        const hold = holds.find((h) => String(h.id) === String(id));
-        if (!hold) return null;
-        return { ...step, bbox: hold.bbox, center_norm: hold.center_norm, hold_id: hold.id, instruction: step?.instruction || `Step ${idx + 1}` };
-      }).filter(Boolean);
-    }
-  }
-  return [];
+function resolveRouteFromArray(route, holds) {
+  if (!Array.isArray(route)) return [];
+  if (route.length > 0 && route[0].steps) return route[0].steps;
+
+  return route.map((step, idx) => {
+    if (Array.isArray(step?.bbox) || step?.center_norm) return step;
+    const id = step?.id ?? step?.hold_id ?? step?.holdId;
+    if (id === undefined) return null;
+    const hold = holds.find((h) => String(h.id) === String(id));
+    if (!hold) return null;
+    return { ...step, bbox: hold.bbox, center_norm: hold.center_norm, hold_id: hold.id };
+  }).filter(Boolean);
 }
 
 function stepToPoint(step, holds) {
@@ -132,6 +131,44 @@ function stepToPoint(step, holds) {
 }
 
 // --- Rendering ---
+function drawRoute(steps, holds, style, labelPrefix) {
+  if (!steps.length) return;
+
+  const points = [];
+  steps.forEach((step, idx) => {
+    const pt = stepToPoint(step, holds);
+    if (!pt) return;
+    points.push({ ...pt, idx });
+  });
+
+  if (!points.length) return;
+
+  // Draw path lines
+  for (let i = 0; i < points.length - 1; i++) {
+    const a = points[i], b = points[i + 1];
+    const attrs = {
+      x1: a.cx, y1: a.cy, x2: b.cx, y2: b.cy,
+      stroke: style.color, "stroke-width": 5, "stroke-linecap": "round",
+    };
+    if (style.dash) attrs["stroke-dasharray"] = style.dash;
+    overlaySvg.appendChild(svgEl("line", attrs));
+  }
+
+  // Draw numbered nodes
+  points.forEach(({ cx, cy, idx }) => {
+    overlaySvg.appendChild(svgEl("circle", {
+      cx, cy, r: 14,
+      fill: "rgba(14,17,23,0.8)", stroke: style.color, "stroke-width": 3,
+    }));
+    const text = svgEl("text", {
+      x: cx, y: cy + 5, "text-anchor": "middle",
+      "font-size": 13, "font-weight": 700, fill: style.color,
+    });
+    text.textContent = `${labelPrefix}${idx + 1}`;
+    overlaySvg.appendChild(text);
+  });
+}
+
 function renderOverlay(holds, coach) {
   if (!overlaySvg || !wallImage) return;
   clearOverlay();
@@ -143,38 +180,14 @@ function renderOverlay(holds, coach) {
   overlaySvg.setAttribute("viewBox", `0 0 ${imgW} ${imgH}`);
   overlaySvg.setAttribute("preserveAspectRatio", "none");
 
-  const steps = resolveRouteSteps(coach, holds);
-  if (!steps.length) return;
+  if (!coach) return;
 
-  const points = [];
-  steps.forEach((step, idx) => {
-    const pt = stepToPoint(step, holds);
-    if (!pt) return;
-    points.push({ ...pt, idx });
-  });
+  const stepsA = resolveRouteFromArray(coach.routeA, holds);
+  const stepsB = resolveRouteFromArray(coach.routeB, holds);
 
-  // Draw path lines
-  for (let i = 0; i < points.length - 1; i++) {
-    const a = points[i], b = points[i + 1];
-    overlaySvg.appendChild(svgEl("line", {
-      x1: a.cx, y1: a.cy, x2: b.cx, y2: b.cy,
-      stroke: "rgba(61,220,151,0.85)", "stroke-width": 6, "stroke-linecap": "round",
-    }));
-  }
-
-  // Draw numbered nodes
-  points.forEach(({ cx, cy, idx }) => {
-    overlaySvg.appendChild(svgEl("circle", {
-      cx, cy, r: 16,
-      fill: "rgba(14,17,23,0.8)", stroke: "rgba(61,220,151,0.95)", "stroke-width": 4,
-    }));
-    const text = svgEl("text", {
-      x: cx, y: cy + 6, "text-anchor": "middle",
-      "font-size": 16, "font-weight": 700, fill: "rgba(61,220,151,0.98)",
-    });
-    text.textContent = String(idx + 1);
-    overlaySvg.appendChild(text);
-  });
+  // Draw Route B first (behind) then Route A on top
+  if (stepsB.length > 0) drawRoute(stepsB, holds, ROUTE_STYLES.B, "B");
+  if (stepsA.length > 0) drawRoute(stepsA, holds, ROUTE_STYLES.A, "");
 }
 
 function renderHolds(holds, imgW, imgH) {
@@ -199,18 +212,21 @@ function selectHold(hold) {
   const conf = Number(hold.confidence || 0);
   const pct = (conf <= 1 ? conf * 100 : conf).toFixed(1);
 
-  // Find step number if in route
-  const steps = resolveRouteSteps(currentCoach, currentHolds);
-  let stepNum = null;
-  for (let i = 0; i < steps.length; i++) {
-    const sid = steps[i]?.id ?? steps[i]?.hold_id;
-    if (sid !== undefined && String(sid) === String(hold.id)) { stepNum = i + 1; break; }
-  }
+  // Check if hold is in route A or B
+  const stepsA = currentCoach ? resolveRouteFromArray(currentCoach.routeA, currentHolds) : [];
+  const stepsB = currentCoach ? resolveRouteFromArray(currentCoach.routeB, currentHolds) : [];
+
+  const inA = stepsA.findIndex((s) => String(s?.id ?? s?.hold_id) === String(hold.id));
+  const inB = stepsB.findIndex((s) => String(s?.id ?? s?.hold_id) === String(hold.id));
+
+  let routeInfo = "";
+  if (inA >= 0) routeInfo += `<span style="color:${ROUTE_STYLES.A.labelColor}">Route A step #${inA + 1}</span><br/>`;
+  if (inB >= 0) routeInfo += `<span style="color:${ROUTE_STYLES.B.labelColor}">Route B step #${inB + 1}</span><br/>`;
 
   setInfoHtml(`
     <strong>Type:</strong> ${hold.type || "Unknown"}<br/>
     <strong>Confidence:</strong> ${pct}%<br/>
-    ${stepNum ? `<strong>Route step:</strong> #${stepNum}<br/>` : ""}
+    ${routeInfo}
     <strong>Hold ID:</strong> ${hold.id}
   `);
 }
@@ -226,8 +242,10 @@ function renderCoachSummary(coach) {
 
   coachContent.innerHTML = `
     <p><strong>Difficulty:</strong> <span class="difficulty-badge ${diffClass}">${coach.difficulty || "Unknown"}</span></p>
-    <p style="margin-top:0.75rem"><strong>Route A:</strong> ${routeALen} holds</p>
-    ${routeBLen ? `<p><strong>Route B:</strong> ${routeBLen} holds</p>` : ""}
+    <div class="route-legend" style="margin-top:0.75rem">
+      <p><span style="color:${ROUTE_STYLES.A.labelColor}; font-weight:600">━━ Route A</span> (standard) — ${routeALen} holds</p>
+      ${routeBLen ? `<p><span style="color:${ROUTE_STYLES.B.labelColor}; font-weight:600">╌╌ Route B</span> (harder) — ${routeBLen} holds</p>` : ""}
+    </div>
     <p style="margin-top:0.75rem; color: var(--muted); font-size: 0.9rem">${notes}</p>
   `;
   coachSummary.hidden = false;
@@ -276,7 +294,6 @@ async function analyzeWall(file) {
     });
   } catch (err) {
     setInfoHtml(`<span style="color:var(--danger)">Route error: ${err.message}</span>`);
-    // Still show holds on the image
     wallImage.onload = () => {
       const w = wallImage.naturalWidth, h = wallImage.naturalHeight;
       renderHolds(currentHolds, w, h);
