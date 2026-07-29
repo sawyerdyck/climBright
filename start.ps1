@@ -1,20 +1,18 @@
-# start.ps1 — Start all climBright services (MongoDB, FastAPI, Express)
-# Usage: .\start.ps1
-# Stop:  .\stop.ps1
+# start.ps1 - Start all climBright services (MongoDB, FastAPI, Express)
+# Usage: powershell -ExecutionPolicy Bypass -File .\start.ps1
+# Stop:  powershell -ExecutionPolicy Bypass -File .\stop.ps1
 
 $ErrorActionPreference = "Continue"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-Write-Host "climBright — Starting services..." -ForegroundColor Cyan
+Write-Host "climBright - Starting services..." -ForegroundColor Cyan
 
 # --- MongoDB ---
-$mongod = "C:\Program Files\MongoDB\Server\8.3\bin\mongod.exe"
-if (-not (Test-Path $mongod)) {
-    # Try to find any installed version
-    $mongod = Get-ChildItem "C:\Program Files\MongoDB\Server" -Recurse -Filter "mongod.exe" -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
-}
+$mongod = $null
+$mongoSearch = Get-ChildItem "C:\Program Files\MongoDB\Server" -Recurse -Filter "mongod.exe" -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
+if ($mongoSearch) { $mongod = $mongoSearch }
 if (-not $mongod) {
-    Write-Host "  [!] mongod not found. Install MongoDB or update the path in this script." -ForegroundColor Red
+    Write-Host "  [!] mongod not found. Install MongoDB." -ForegroundColor Red
     exit 1
 }
 
@@ -35,12 +33,15 @@ Write-Host "        PID: $($fastapiProc.Id)" -ForegroundColor DarkGray
 Start-Sleep -Seconds 3
 
 # --- Express (frontend) ---
-$nodeExe = "C:\Program Files\nodejs\node.exe"
-if (-not (Test-Path $nodeExe)) {
-    $nodeExe = (Get-Command node -ErrorAction SilentlyContinue).Source
+$nodeExe = $null
+if (Test-Path "C:\Program Files\nodejs\node.exe") {
+    $nodeExe = "C:\Program Files\nodejs\node.exe"
+} else {
+    $found = Get-Command node -ErrorAction SilentlyContinue
+    if ($found) { $nodeExe = $found.Source }
 }
 if (-not $nodeExe) {
-    Write-Host "  [!] node not found. Install Node.js or update the path in this script." -ForegroundColor Red
+    Write-Host "  [!] node not found. Install Node.js." -ForegroundColor Red
     exit 1
 }
 
