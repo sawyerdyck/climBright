@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>climBright – Hold Classifier</title>
+  <title>climBright – Hold Buddy</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
@@ -24,27 +24,28 @@
   <main>
     <section class="hero">
       <h2>Hold Buddy</h2>
-      <p>Upload an image of a hold to classify it.</p>
+      <p>Upload an image of a climbing hold to classify its grip type.</p>
     </section>
 
-    <section id="holds" class="card">
-      <h3>Upload</h3>
-      <p>Click or drag an image. We keep the preview and also send base64 to your FastAPI.</p>
+    <section class="card">
+      <h3>Upload a Hold Image</h3>
+      <p>Accepts JPG or PNG. We'll identify the grip type and confidence.</p>
 
       <div class="upload-box" id="holdUpload">
         <input type="file" hidden accept="image/jpeg,image/png" />
+        <span class="upload-icon">📷</span>
         <span>Click or drag an image here</span>
       </div>
 
       <div class="preview" id="holdPreview"></div>
 
-      <div class="result-box">
+      <div class="result-box" id="holdResultBox">
         <h4>Classification Result</h4>
-        <p class="placeholder" id="holdResultText">Waiting for AI output...</p>
+        <p class="placeholder" id="holdResultText">Upload an image to see results.</p>
+        <ul class="hold-list" id="holdList" hidden></ul>
       </div>
     </section>
   </main>
-
 
   <script src="/holds.js"></script>
 </body>

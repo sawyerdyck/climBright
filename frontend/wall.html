@@ -12,7 +12,7 @@
     <h1><a class="brand" href="/holds">climBright</a></h1>
     <nav>
       <a href="/holds">Hold Buddy</a>
-      <a class="active" href="/wall">Wall Buddy (analysis)</a>
+      <a class="active" href="/wall">Wall Analysis</a>
     </nav>
 
     <div class="auth-bar">
@@ -24,32 +24,37 @@
   <main>
     <section class="hero">
       <h2>Wall Analysis</h2>
-      <p>Upload a wall image and click holds to see details (demo markers for now).</p>
+      <p>Upload a wall photo to detect holds and get AI-generated climbing routes.</p>
     </section>
 
-    <section id="wall" class="card">
-      <h3>Wall Route Analyzer</h3>
-      <p>Upload a full wall image, then select individual holds for analysis.</p>
+    <section class="card">
+      <h3>Upload Wall Image</h3>
+      <p>We'll detect holds, classify them, and suggest optimal climbing sequences.</p>
 
       <div class="upload-box" id="wallUpload">
         <input type="file" hidden accept="image/*" />
-        <span>Click or drag wall image here</span>
+        <span class="upload-icon">🧗</span>
+        <span>Click or drag a wall image here</span>
       </div>
 
-      <div class="wall-container">
+      <div class="wall-container" id="wallContainer" hidden>
         <div class="image-wrapper" id="wallImageWrapper">
           <img id="wallImage" alt="Wall" />
           <svg id="wallOverlay" aria-hidden="true"></svg>
         </div>
 
-        <div class="hold-info">
+        <div class="hold-info" id="holdInfoPanel">
           <h4>Selected Hold</h4>
           <p class="placeholder" id="holdInfoText">Click a hold on the wall to see details.</p>
         </div>
       </div>
+
+      <div class="coach-summary" id="coachSummary" hidden>
+        <h4>Route Coach</h4>
+        <div id="coachContent"></div>
+      </div>
     </section>
   </main>
-
 
   <script src="/wall.js"></script>
 </body>
