@@ -11,7 +11,7 @@
 <body>
 
   <header class="navbar">
-    <h1><a class="brand" href="/holds">climBright</a></h1>
+    <h1><a class="brand" href="/holds"><span>clim</span>Bright</a></h1>
     <nav>
       <a href="/holds">Hold Buddy</a>
       <a class="active" href="/wall">Wall Analysis</a>
@@ -34,7 +34,7 @@
       <h3>Upload Wall Image</h3>
       <p>We'll detect holds, classify them, and suggest optimal climbing sequences.</p>
 
-      <div class="upload-box" id="wallUpload">
+      <div class="upload-box" id="wallUpload" role="button" aria-label="Upload wall image" tabindex="0">
         <input type="file" hidden accept="image/*" />
         <span class="upload-icon">🧗</span>
         <span>Click or drag a wall image here</span>

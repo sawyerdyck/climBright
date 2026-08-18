@@ -49,7 +49,7 @@ const holdOverlay = document.getElementById("holdOverlay");
 function showLoading() {
   if (resultText) {
     resultText.classList.remove("placeholder");
-    resultText.innerHTML = '<span class="spinner"></span><span class="loading-text">Analyzing hold…</span>';
+    resultText.innerHTML = '<div class="skeleton skeleton-lg"></div><div class="skeleton"></div><div class="skeleton" style="width:60%"></div>';
   }
   if (holdList) holdList.hidden = true;
 }
@@ -64,6 +64,7 @@ function showResult(text, isError = false) {
 function showHoldsList(holds, bestIdx) {
   if (!holdList || !holds.length) return;
   holdList.hidden = false;
+  holdList.classList.remove('fade-in-up'); void holdList.offsetWidth; holdList.classList.add('fade-in-up');
   holdList.innerHTML = holds.map((h, i) => {
     const label = getHoldLabel(h);
     const conf = getHoldConfidence(h);
@@ -166,6 +167,7 @@ function handlePreview(input) {
   if (!file || !holdImage || !holdImageWrapper) return;
 
   holdImageWrapper.hidden = false;
+  holdImageWrapper.classList.remove('fade-in-up'); void holdImageWrapper.offsetWidth; holdImageWrapper.classList.add('fade-in-up');
   holdImage.src = URL.createObjectURL(file);
   clearOverlay();
 }

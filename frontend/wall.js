@@ -49,6 +49,7 @@ const coachContent = document.getElementById("coachContent");
 
 let currentHolds = [];
 let currentCoach = null;
+let selectedMarkerEl = null;
 
 // Route display config
 const ROUTE_STYLES = {
@@ -95,7 +96,7 @@ function setInfoHtml(html) {
 function showLoading() {
   if (holdInfoText) {
     holdInfoText.classList.remove("placeholder");
-    holdInfoText.innerHTML = '<span class="spinner"></span><span class="loading-text">Analyzing wall…</span>';
+    holdInfoText.innerHTML = '<div class="skeleton skeleton-lg"></div><div class="skeleton"></div><div class="skeleton" style="width:60%"></div>';
   }
   if (coachSummary) coachSummary.hidden = true;
 }
@@ -208,6 +209,7 @@ function renderHolds(holds, imgW, imgH) {
 
     const marker = document.createElement("div");
     marker.className = "hold-marker";
+    marker.dataset.holdId = hold.id;
     marker.style.left = `${(cx / imgW) * 100}%`;
     marker.style.top = `${(cy / imgH) * 100}%`;
     marker.title = `Hold ${hold.id} — ${hold.type || "Unknown"}`;
@@ -217,6 +219,10 @@ function renderHolds(holds, imgW, imgH) {
 }
 
 function selectHold(hold) {
+  if (selectedMarkerEl) selectedMarkerEl.classList.remove('selected');
+  const newMarker = wallWrapper?.querySelector(`.hold-marker[data-hold-id="${hold.id}"]`);
+  if (newMarker) { newMarker.classList.add('selected'); selectedMarkerEl = newMarker; }
+
   const conf = Number(hold.confidence || 0);
   const pct = (conf <= 1 ? conf * 100 : conf).toFixed(1);
 
@@ -237,6 +243,7 @@ function selectHold(hold) {
     ${routeInfo}
     <strong>Hold ID:</strong> ${hold.id}
   `);
+  holdInfoText.classList.remove('fade-in-up'); void holdInfoText.offsetWidth; holdInfoText.classList.add('fade-in-up');
 }
 
 function renderCoachSummary(coach) {
@@ -257,6 +264,7 @@ function renderCoachSummary(coach) {
     <p style="margin-top:0.75rem; color: var(--muted); font-size: 0.9rem">${notes}</p>
   `;
   coachSummary.hidden = false;
+  coachSummary.classList.remove('fade-in-up'); void coachSummary.offsetWidth; coachSummary.classList.add('fade-in-up');
 }
 
 // --- Wall analysis ---
@@ -268,6 +276,7 @@ async function analyzeWall(file) {
 
   showLoading();
   if (wallContainer) wallContainer.hidden = false;
+  wallContainer.classList.add('fade-in-up');
   clearOverlay();
 
   const imageBase64 = await fileToBase64(file);

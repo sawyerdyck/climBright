@@ -11,7 +11,7 @@
 <body>
 
   <header class="navbar">
-    <h1><a class="brand" href="/holds">climBright</a></h1>
+    <h1><a class="brand" href="/holds"><span>clim</span>Bright</a></h1>
     <nav>
       <a class="active" href="/holds">Hold Buddy</a>
       <a href="/wall">Wall Analysis</a>
@@ -34,7 +34,7 @@
       <h3>Upload a Hold Image</h3>
       <p>Accepts JPG or PNG. We'll identify the grip type and confidence.</p>
 
-      <div class="upload-box" id="holdUpload">
+      <div class="upload-box" id="holdUpload" role="button" aria-label="Upload hold image" tabindex="0">
         <input type="file" hidden accept="image/jpeg,image/png" />
         <span class="upload-icon">📷</span>
         <span>Click or drag an image here</span>

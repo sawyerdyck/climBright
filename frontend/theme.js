@@ -26,7 +26,9 @@
     btn.textContent = getPreferred() === "dark" ? "☀️" : "🌙";
     btn.addEventListener("click", () => {
       const current = document.documentElement.getAttribute("data-theme") || "dark";
+      document.documentElement.classList.add('theme-transitioning');
       apply(current === "dark" ? "light" : "dark");
+      setTimeout(() => document.documentElement.classList.remove('theme-transitioning'), 500);
     });
   });
 })();
