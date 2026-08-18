@@ -306,6 +306,11 @@ async function analyzeAndStoreHoldImage(file) {
     showResult("AI responded, but no holds detected in this image.", true);
   }
 
+  // Persist analysis results for cross-page navigation
+  if (holds.length > 0) {
+    storeAnalysis("holds", { holds, bestIdx: holds.indexOf(holds.reduce((a, b) => getHoldConfidence(a) >= getHoldConfidence(b) ? a : b, holds[0])) });
+  }
+
   // Store in backend (non-fatal)
   try {
     await apiJson("/api/images", {
@@ -329,10 +334,34 @@ async function analyzeAndStoreHoldImage(file) {
   await requireSessionOrRedirect();
   setupUpload("holdUpload", analyzeAndStoreHoldImage);
 
-  // Restore previously uploaded image if navigating back
+  // Restore previously uploaded image and analysis if navigating back
   const stored = getStoredImage();
   if (stored && holdImage && holdImageWrapper) {
     holdImage.src = stored.dataUrl;
     holdImageWrapper.hidden = false;
+
+    // Restore analysis results (holds, bboxes)
+    const analysis = getStoredAnalysis("holds");
+    if (analysis && Array.isArray(analysis.holds) && analysis.holds.length > 0) {
+      const holds = analysis.holds;
+      let bestIdx = 0;
+      let bestConf = getHoldConfidence(holds[0]);
+      for (let i = 1; i < holds.length; i++) {
+        const c = getHoldConfidence(holds[i]);
+        if (c > bestConf) { bestIdx = i; bestConf = c; }
+      }
+      const best = holds[bestIdx];
+      const pct = (bestConf <= 1 ? bestConf * 100 : bestConf).toFixed(1);
+      showResult(`${holds.length} hold${holds.length > 1 ? "s" : ""} detected. Best: ${getHoldLabel(best)} (${pct}%)`);
+      showHoldsList(holds, bestIdx);
+
+      const drawBoxes = () => {
+        const imgW = holdImage.naturalWidth || holdImage.width;
+        const imgH = holdImage.naturalHeight || holdImage.height;
+        if (imgW && imgH) drawBoundingBoxes(holds, imgW, imgH);
+      };
+      if (holdImage.complete && holdImage.naturalWidth) drawBoxes();
+      else holdImage.addEventListener("load", drawBoxes, { once: true });
+    }
   }
 })();

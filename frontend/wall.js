@@ -324,6 +324,9 @@ async function analyzeWall(file) {
 
   currentCoach = result.coach || null;
 
+  // Persist analysis for cross-page navigation
+  storeAnalysis("wall", { holds: currentHolds, coach: currentCoach });
+
   wallImage.onload = () => {
     const w = wallImage.naturalWidth, h = wallImage.naturalHeight;
     renderHolds(currentHolds, w, h);
@@ -367,11 +370,39 @@ function setupWallImageUpload() {
   await requireSessionOrRedirect();
   setupWallImageUpload();
 
-  // Restore previously uploaded image if navigating from another page
+  // Restore previously uploaded image and analysis if navigating from another page
   const stored = getStoredImage();
   if (stored && wallImage && wallContainer) {
     wallImage.src = stored.dataUrl;
     wallContainer.hidden = false;
-    setInfoHtml('<span style="color:var(--muted)">Previous image restored. Click upload to analyze, or upload a new one.</span>');
+
+    // Restore analysis results (holds, routes, coach)
+    const analysis = getStoredAnalysis("wall");
+    if (analysis && Array.isArray(analysis.holds) && analysis.holds.length > 0) {
+      currentHolds = analysis.holds;
+      currentCoach = analysis.coach || null;
+
+      wallImage.onload = () => {
+        const w = wallImage.naturalWidth, h = wallImage.naturalHeight;
+        renderHolds(currentHolds, w, h);
+        if (currentCoach) {
+          renderOverlay(currentHolds, currentCoach);
+          renderCoachSummary(currentCoach);
+        }
+        setInfoHtml(`<span style="color:var(--muted)">${currentHolds.length} holds detected. Click one for details.</span>`);
+      };
+      // If image already loaded (cached)
+      if (wallImage.complete && wallImage.naturalWidth) {
+        const w = wallImage.naturalWidth, h = wallImage.naturalHeight;
+        renderHolds(currentHolds, w, h);
+        if (currentCoach) {
+          renderOverlay(currentHolds, currentCoach);
+          renderCoachSummary(currentCoach);
+        }
+        setInfoHtml(`<span style="color:var(--muted)">${currentHolds.length} holds detected. Click one for details.</span>`);
+      }
+    } else {
+      setInfoHtml('<span style="color:var(--muted)">Previous image restored. Upload again to re-analyze.</span>');
+    }
   }
 })();
