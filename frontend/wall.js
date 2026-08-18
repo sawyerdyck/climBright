@@ -372,6 +372,8 @@ function setupWallImageUpload() {
 
   // Restore previously uploaded image and analysis if navigating from another page
   const stored = getStoredImage();
+  const analyzeBtn = document.getElementById("analyzeStoredBtn");
+
   if (stored && wallImage && wallContainer) {
     wallImage.src = stored.dataUrl;
     wallContainer.hidden = false;
@@ -401,8 +403,15 @@ function setupWallImageUpload() {
         }
         setInfoHtml(`<span style="color:var(--muted)">${currentHolds.length} holds detected. Click one for details.</span>`);
       }
-    } else {
-      setInfoHtml('<span style="color:var(--muted)">Previous image restored. Upload again to re-analyze.</span>');
+    } else if (analyzeBtn) {
+      // Image loaded but no wall analysis — offer to analyze it
+      analyzeBtn.hidden = false;
+      analyzeBtn.addEventListener("click", () => {
+        analyzeBtn.hidden = true;
+        const file = dataUrlToFile(stored.dataUrl, stored.name, stored.type);
+        analyzeWall(file);
+      });
+      setInfoHtml('<span style="color:var(--muted)">Image loaded. Click the button above to analyze.</span>');
     }
   }
 })();

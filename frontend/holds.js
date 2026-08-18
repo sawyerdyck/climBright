@@ -336,6 +336,8 @@ async function analyzeAndStoreHoldImage(file) {
 
   // Restore previously uploaded image and analysis if navigating back
   const stored = getStoredImage();
+  const analyzeBtn = document.getElementById("analyzeStoredBtn");
+
   if (stored && holdImage && holdImageWrapper) {
     holdImage.src = stored.dataUrl;
     holdImageWrapper.hidden = false;
@@ -362,6 +364,14 @@ async function analyzeAndStoreHoldImage(file) {
       };
       if (holdImage.complete && holdImage.naturalWidth) drawBoxes();
       else holdImage.addEventListener("load", drawBoxes, { once: true });
+    } else if (analyzeBtn) {
+      // Image loaded but no analysis — offer to analyze it
+      analyzeBtn.hidden = false;
+      analyzeBtn.addEventListener("click", () => {
+        analyzeBtn.hidden = true;
+        const file = dataUrlToFile(stored.dataUrl, stored.name, stored.type);
+        analyzeAndStoreHoldImage(file);
+      });
     }
   }
 })();
