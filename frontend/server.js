@@ -10,6 +10,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const rateLimit = require("express-rate-limit");
 
 const { requireAuth } = require("./src/middleware/auth");
 const authRoutes = require("./src/routes/auth");
@@ -21,6 +22,12 @@ const MONGODB_URI = process.env.MONGODB_URI;
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN;
 
 const app = express();
+const appLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 app.use(
   cors({
@@ -31,6 +38,7 @@ app.use(
 
 app.use(express.json({ limit: "12mb" }));
 app.use(cookieParser());
+app.use(appLimiter);
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true });

@@ -3,8 +3,16 @@ const path = require("path");
 const { spawn } = require("child_process");
 
 const express = require("express");
+const rateLimit = require("express-rate-limit");
 
 const router = express.Router();
+const wallLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+router.use(wallLimiter);
 
 function ensureDir(dirPath) {
   fs.mkdirSync(dirPath, { recursive: true });

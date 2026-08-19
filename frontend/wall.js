@@ -87,10 +87,11 @@ function bboxToCenter(bbox) {
   return { cx: (x1 + x2) / 2, cy: (y1 + y2) / 2 };
 }
 
-function setInfoHtml(html) {
+function setInfoText(text, tone = "default") {
   if (!holdInfoText) return;
   holdInfoText.classList.remove("placeholder");
-  holdInfoText.innerHTML = html;
+  holdInfoText.textContent = text;
+  holdInfoText.style.color = tone === "error" ? "var(--danger)" : "var(--muted)";
 }
 
 function showLoading() {
@@ -233,16 +234,17 @@ function selectHold(hold) {
   const inA = stepsA.findIndex((s) => String(s?.id ?? s?.hold_id) === String(hold.id));
   const inB = stepsB.findIndex((s) => String(s?.id ?? s?.hold_id) === String(hold.id));
 
-  let routeInfo = "";
-  if (inA >= 0) routeInfo += `<span style="color:${ROUTE_STYLES.A.labelColor}">Route A step #${inA + 1}</span><br/>`;
-  if (inB >= 0) routeInfo += `<span style="color:${ROUTE_STYLES.B.labelColor}">Route B step #${inB + 1}</span><br/>`;
+  const routeBits = [];
+  if (inA >= 0) routeBits.push(`Route A step #${inA + 1}`);
+  if (inB >= 0) routeBits.push(`Route B step #${inB + 1}`);
 
-  setInfoHtml(`
-    <strong>Type:</strong> ${hold.type || "Unknown"}<br/>
-    <strong>Confidence:</strong> ${pct}%<br/>
-    ${routeInfo}
-    <strong>Hold ID:</strong> ${hold.id}
-  `);
+  const summary = [
+    `Type: ${hold.type || "Unknown"}`,
+    `Confidence: ${pct}%`,
+    routeBits.length ? `Route: ${routeBits.join(", ")}` : null,
+    `Hold ID: ${hold.id}`,
+  ].filter(Boolean).join(" | ");
+  setInfoText(summary);
   holdInfoText.classList.remove('fade-in-up'); void holdInfoText.offsetWidth; holdInfoText.classList.add('fade-in-up');
 }
 
@@ -255,14 +257,43 @@ function renderCoachSummary(coach) {
   const routeALen = Array.isArray(coach.routeA) ? coach.routeA.length : 0;
   const routeBLen = Array.isArray(coach.routeB) ? coach.routeB.length : 0;
 
-  coachContent.innerHTML = `
-    <p><strong>Difficulty:</strong> <span class="difficulty-badge ${diffClass}">${coach.difficulty || "Unknown"}</span></p>
-    <div class="route-legend" style="margin-top:0.75rem">
-      <p><span style="color:${ROUTE_STYLES.A.labelColor}; font-weight:600">━━ Route A</span> (standard) — ${routeALen} holds</p>
-      ${routeBLen ? `<p><span style="color:${ROUTE_STYLES.B.labelColor}; font-weight:600">╌╌ Route B</span> (harder) — ${routeBLen} holds</p>` : ""}
-    </div>
-    <p style="margin-top:0.75rem; color: var(--muted); font-size: 0.9rem">${notes}</p>
-  `;
+  coachContent.textContent = "";
+
+  const diffP = document.createElement("p");
+  const diffStrong = document.createElement("strong");
+  diffStrong.textContent = "Difficulty:";
+  diffP.appendChild(diffStrong);
+  diffP.append(" ");
+  const diffBadge = document.createElement("span");
+  diffBadge.className = `difficulty-badge ${diffClass}`;
+  diffBadge.textContent = coach.difficulty || "Unknown";
+  diffP.appendChild(diffBadge);
+  coachContent.appendChild(diffP);
+
+  const legend = document.createElement("div");
+  legend.className = "route-legend";
+  legend.style.marginTop = "0.75rem";
+  const routeAP = document.createElement("p");
+  routeAP.textContent = `━━ Route A (standard) — ${routeALen} holds`;
+  routeAP.style.color = ROUTE_STYLES.A.labelColor;
+  routeAP.style.fontWeight = "600";
+  legend.appendChild(routeAP);
+
+  if (routeBLen) {
+    const routeBP = document.createElement("p");
+    routeBP.textContent = `╌╌ Route B (harder) — ${routeBLen} holds`;
+    routeBP.style.color = ROUTE_STYLES.B.labelColor;
+    routeBP.style.fontWeight = "600";
+    legend.appendChild(routeBP);
+  }
+  coachContent.appendChild(legend);
+
+  const notesP = document.createElement("p");
+  notesP.style.marginTop = "0.75rem";
+  notesP.style.color = "var(--muted)";
+  notesP.style.fontSize = "0.9rem";
+  notesP.textContent = notes;
+  coachContent.appendChild(notesP);
   coachSummary.hidden = false;
   coachSummary.classList.remove('fade-in-up'); void coachSummary.offsetWidth; coachSummary.classList.add('fade-in-up');
 }
@@ -284,7 +315,7 @@ async function analyzeWall(file) {
 
   const fastapiUrl = await getFastApiUrl();
   if (!fastapiUrl) {
-    setInfoHtml('<span style="color:var(--danger)">FASTAPI_URL is not configured. Set it in frontend/.env.</span>');
+    setInfoText("FASTAPI_URL is not configured. Set it in frontend/.env.", "error");
     return;
   }
 
@@ -299,7 +330,7 @@ async function analyzeWall(file) {
     aiJson = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(aiJson?.detail || aiJson?.error || `FastAPI error (${res.status})`);
   } catch (err) {
-    setInfoHtml(`<span style="color:var(--danger)">AI error: ${err.message}</span>`);
+    setInfoText(`AI error: ${err.message}`, "error");
     return;
   }
 
@@ -313,7 +344,7 @@ async function analyzeWall(file) {
       body: JSON.stringify({ imageBase64, filename: file.name, holds: currentHolds }),
     });
   } catch (err) {
-    setInfoHtml(`<span style="color:var(--danger)">Route error: ${err.message}</span>`);
+    setInfoText(`Route error: ${err.message}`, "error");
     wallImage.onload = () => {
       const w = wallImage.naturalWidth, h = wallImage.naturalHeight;
       renderHolds(currentHolds, w, h);
@@ -332,7 +363,7 @@ async function analyzeWall(file) {
     renderHolds(currentHolds, w, h);
     renderOverlay(currentHolds, currentCoach);
     renderCoachSummary(currentCoach);
-    setInfoHtml(`<span style="color:var(--muted)">${currentHolds.length} holds detected. Click one for details.</span>`);
+    setInfoText(`${currentHolds.length} holds detected. Click one for details.`);
   };
   wallImage.src = URL.createObjectURL(file);
 }
@@ -357,12 +388,12 @@ function setupWallImageUpload() {
     box.classList.remove("dragover");
     input.files = e.dataTransfer.files;
     const file = input.files?.[0];
-    if (file) analyzeWall(file).catch((err) => setInfoHtml(`<span style="color:var(--danger)">${err.message}</span>`));
+    if (file) analyzeWall(file).catch((err) => setInfoText(err.message, "error"));
   });
 
   input.addEventListener("change", () => {
     const file = input.files[0];
-    if (file) analyzeWall(file).catch((err) => setInfoHtml(`<span style="color:var(--danger)">${err.message}</span>`));
+    if (file) analyzeWall(file).catch((err) => setInfoText(err.message, "error"));
   });
 }
 
@@ -391,7 +422,7 @@ function setupWallImageUpload() {
           renderOverlay(currentHolds, currentCoach);
           renderCoachSummary(currentCoach);
         }
-        setInfoHtml(`<span style="color:var(--muted)">${currentHolds.length} holds detected. Click one for details.</span>`);
+        setInfoText(`${currentHolds.length} holds detected. Click one for details.`);
       };
       // If image already loaded (cached)
       if (wallImage.complete && wallImage.naturalWidth) {
@@ -401,7 +432,7 @@ function setupWallImageUpload() {
           renderOverlay(currentHolds, currentCoach);
           renderCoachSummary(currentCoach);
         }
-        setInfoHtml(`<span style="color:var(--muted)">${currentHolds.length} holds detected. Click one for details.</span>`);
+        setInfoText(`${currentHolds.length} holds detected. Click one for details.`);
       }
     } else if (analyzeBtn) {
       // Image loaded but no wall analysis — offer to analyze it
@@ -411,7 +442,7 @@ function setupWallImageUpload() {
         const file = dataUrlToFile(stored.dataUrl, stored.name, stored.type);
         analyzeWall(file);
       });
-      setInfoHtml('<span style="color:var(--muted)">Image loaded. Click the button above to analyze.</span>');
+      setInfoText("Image loaded. Click the button above to analyze.");
     }
   }
 })();
