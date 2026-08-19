@@ -1,8 +1,16 @@
 const express = require("express");
+const rateLimit = require("express-rate-limit");
 
 const ImageUpload = require("../models/ImageUpload");
 
 const router = express.Router();
+const imagesLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+router.use(imagesLimiter);
 
 router.post("/", async (req, res) => {
   const { imageBase64, originalName, mimeType, aiEndpoint, aiResponseRaw, holds, bestHold } = req.body || {};

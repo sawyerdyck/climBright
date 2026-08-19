@@ -65,16 +65,29 @@ function showHoldsList(holds, bestIdx) {
   if (!holdList || !holds.length) return;
   holdList.hidden = false;
   holdList.classList.remove('fade-in-up'); void holdList.offsetWidth; holdList.classList.add('fade-in-up');
-  holdList.innerHTML = holds.map((h, i) => {
+  holdList.textContent = "";
+  holds.forEach((h, i) => {
     const label = getHoldLabel(h);
     const conf = getHoldConfidence(h);
     const pct = (conf <= 1 ? conf * 100 : conf).toFixed(1);
     const isBest = i === bestIdx;
-    return `<li class="${isBest ? "best" : ""}" data-hold-idx="${i}">
-      <span class="hold-label">${label}${isBest ? " ★" : ""}</span>
-      <span class="hold-conf">${pct}%</span>
-    </li>`;
-  }).join("");
+
+    const li = document.createElement("li");
+    if (isBest) li.classList.add("best");
+    li.dataset.holdIdx = String(i);
+
+    const labelSpan = document.createElement("span");
+    labelSpan.className = "hold-label";
+    labelSpan.textContent = `${label}${isBest ? " ★" : ""}`;
+
+    const confSpan = document.createElement("span");
+    confSpan.className = "hold-conf";
+    confSpan.textContent = `${pct}%`;
+
+    li.appendChild(labelSpan);
+    li.appendChild(confSpan);
+    holdList.appendChild(li);
+  });
 
   // Hover on list item highlights the bbox
   holdList.querySelectorAll("li").forEach((li) => {
